@@ -98,36 +98,39 @@ export function useAuth() {
 // 역할별 훅
 export function useAdminAuth() {
   const auth = useAuth();
-  const isAdmin = auth.user?.role === "admin";
+  const user = auth.user;
+  const isAdmin = user?.role === "admin";
 
   return {
     ...auth,
     isAdmin,
-    adminEmail: isAdmin ? auth.user.email : null,
+    adminEmail: user?.role === "admin" ? user.email : null,
   };
 }
 
 export function useInstructorAuth() {
   const auth = useAuth();
-  const isInstructor = auth.user?.role === "instructor";
+  const user = auth.user;
+  const isInstructor = user?.role === "instructor";
 
   return {
     ...auth,
     isInstructor,
-    instructorId: isInstructor ? auth.user.instructorId : null,
-    email: isInstructor ? auth.user.email : null,
+    instructorId: user?.role === "instructor" ? user.instructorId : null,
+    email: user?.role === "instructor" ? user.email : null,
   };
 }
 
 export function useStudentAuth() {
   const auth = useAuth();
-  const isStudent = auth.user?.role === "student";
+  const user = auth.user;
+  const isStudent = user?.role === "student";
 
   return {
     ...auth,
     isStudent,
-    studentId: isStudent ? auth.user.studentId : null,
-    courseId: isStudent ? auth.user.courseId : null,
-    studentNumber: isStudent ? auth.user.studentNumber : null,
+    studentId: user?.role === "student" ? user.studentId : null,
+    courseId: user?.role === "student" ? user.courseId : null,
+    studentNumber: user?.role === "student" ? user.studentNumber : null,
   };
 }

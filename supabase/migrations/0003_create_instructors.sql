@@ -22,9 +22,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER instructors_updated_at
-  BEFORE UPDATE ON instructors
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at();
+-- 트리거 조건부 생성 (이미 존재하면 무시)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'instructors_updated_at'
+  ) THEN
+    CREATE TRIGGER instructors_updated_at
+      BEFORE UPDATE ON instructors
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at();
+  END IF;
+END $$;
 
 

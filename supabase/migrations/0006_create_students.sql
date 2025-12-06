@@ -33,11 +33,17 @@ CREATE INDEX IF NOT EXISTS idx_students_course ON students(course_id);
 CREATE INDEX IF NOT EXISTS idx_students_team ON students(team_id);
 CREATE INDEX IF NOT EXISTS idx_students_number ON students(student_number);
 
--- 트리거
-CREATE TRIGGER students_updated_at
-  BEFORE UPDATE ON students
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at();
+-- 트리거 조건부 생성
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'students_updated_at'
+  ) THEN
+    CREATE TRIGGER students_updated_at
+      BEFORE UPDATE ON students
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at();
+  END IF;
+END $$;
 
 -- 프로필 완료 체크 함수
 CREATE OR REPLACE FUNCTION check_profile_completed()
@@ -58,10 +64,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER students_profile_check
-  BEFORE INSERT OR UPDATE ON students
-  FOR EACH ROW
-  EXECUTE FUNCTION check_profile_completed();
+-- 프로필 체크 트리거 조건부 생성
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'students_profile_check'
+  ) THEN
+    CREATE TRIGGER students_profile_check
+      BEFORE INSERT OR UPDATE ON students
+      FOR EACH ROW
+      EXECUTE FUNCTION check_profile_completed();
+  END IF;
+END $$;
 
 -- 팀 멤버 수 동기화 함수
 CREATE OR REPLACE FUNCTION sync_team_member_count()
@@ -75,7 +88,7 @@ BEGIN
     )
     WHERE team_id = OLD.team_id;
   END IF;
-  
+
   -- 새 팀 멤버 수 갱신
   IF NEW.team_id IS NOT NULL THEN
     UPDATE teams
@@ -84,14 +97,21 @@ BEGIN
     )
     WHERE team_id = NEW.team_id;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER students_team_sync
-  AFTER UPDATE OF team_id ON students
-  FOR EACH ROW
-  EXECUTE FUNCTION sync_team_member_count();
+-- 팀 동기화 트리거 조건부 생성
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'students_team_sync'
+  ) THEN
+    CREATE TRIGGER students_team_sync
+      AFTER UPDATE OF team_id ON students
+      FOR EACH ROW
+      EXECUTE FUNCTION sync_team_member_count();
+  END IF;
+END $$;
 
 

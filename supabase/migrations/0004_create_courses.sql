@@ -19,10 +19,16 @@ CREATE INDEX IF NOT EXISTS idx_courses_instructor ON courses(instructor_id);
 CREATE INDEX IF NOT EXISTS idx_courses_status ON courses(status);
 CREATE INDEX IF NOT EXISTS idx_courses_deadline ON courses(deadline);
 
--- 트리거
-CREATE TRIGGER courses_updated_at
-  BEFORE UPDATE ON courses
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at();
+-- 트리거 조건부 생성
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'courses_updated_at'
+  ) THEN
+    CREATE TRIGGER courses_updated_at
+      BEFORE UPDATE ON courses
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at();
+  END IF;
+END $$;
 
 

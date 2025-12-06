@@ -14,6 +14,9 @@ const PUBLIC_PREFIXES = [
   "/images",
 ] as const;
 
+// 기본 로그인 페이지 (역할 선택)
+export const LOGIN_PATH = "/login";
+
 // 역할별 로그인 페이지
 export const ADMIN_LOGIN_PATH = "/admin";
 export const INSTRUCTOR_LOGIN_PATH = "/instructor";

@@ -29,10 +29,11 @@ export const getSupabaseBrowserClient = () => {
   );
 
   if (!client) {
-    client = createBrowserClient<Database>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    client = createBrowserClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    ) as any;
   }
 
   return client;

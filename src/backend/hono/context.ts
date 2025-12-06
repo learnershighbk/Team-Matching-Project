@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { TokenPayload } from '@/features/auth/backend/jwt';
 
 export type AppLogger = Pick<Console, 'info' | 'error' | 'warn' | 'debug'>;
 
@@ -14,6 +15,7 @@ export type AppVariables = {
   supabase: SupabaseClient;
   logger: AppLogger;
   config: AppConfig;
+  auth?: TokenPayload;
 };
 
 export type AppEnv = {
@@ -26,7 +28,8 @@ export const contextKeys = {
   supabase: 'supabase',
   logger: 'logger',
   config: 'config',
-} as const satisfies Record<keyof AppVariables, keyof AppVariables>;
+  auth: 'auth',
+} as const;
 
 export const getSupabase = (c: AppContext) =>
   c.get(contextKeys.supabase) as SupabaseClient;
@@ -36,3 +39,6 @@ export const getLogger = (c: AppContext) =>
 
 export const getConfig = (c: AppContext) =>
   c.get(contextKeys.config) as AppConfig;
+
+export const getAuth = (c: AppContext) =>
+  c.get(contextKeys.auth) as TokenPayload | undefined;
