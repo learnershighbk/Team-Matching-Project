@@ -120,11 +120,12 @@ export function useCourseStudents(courseId: string) {
   return useQuery({
     queryKey: ['instructor', 'courses', courseId, 'students'],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<StudentStatus[]>>(`/api/instructor/courses/${courseId}/students`);
+      const { data } = await apiClient.get<ApiResponse<{ total: number; completed: number; students: StudentStatus[] }>>(`/api/instructor/courses/${courseId}/students`);
       if (!data.success) {
         throw new Error(data.error?.message || '학생 목록을 불러오는데 실패했습니다');
       }
-      return data.data || [];
+      // API returns { total, completed, students }, but we only need the students array
+      return Array.isArray(data.data?.students) ? data.data.students : [];
     },
     enabled: !!courseId,
   });

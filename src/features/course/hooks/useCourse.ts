@@ -15,7 +15,7 @@ export function useCourseStatus(uuid: string) {
   return useQuery({
     queryKey: ['course', 'status', uuid],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<CourseStatus>>(`/api/course/${uuid}`);
+      const { data } = await apiClient.get<ApiResponse<CourseStatus>>(`/api/course/${uuid}/status`);
       if (!data.success) {
         throw new Error(data.error?.message || '코스 정보를 불러오는데 실패했습니다');
       }

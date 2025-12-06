@@ -19,13 +19,58 @@ import { useCourseStatus } from '@/features/course/hooks/useCourse';
 import { useStudentProfile, useUpdateProfile } from '@/features/student/hooks/useStudent';
 import { toast } from '@/hooks/use-toast';
 
-const MAJORS = ['Undergraduate', 'Master', 'PhD'];
-const GENDERS = ['Male', 'Female', 'Other'];
-const CONTINENTS = ['Asia', 'Europe', 'North America', 'South America', 'Africa', 'Oceania'];
-const ROLES = ['Leader', 'Member', 'Flexible'];
-const SKILLS = ['Beginner', 'Intermediate', 'Advanced'];
-const TIMES = ['Morning', 'Afternoon', 'Evening'];
-const GOALS = ['Learn', 'Complete', 'Excel'];
+// PRD에 따른 옵션 정의 (표시값: DB값)
+const MAJORS = [
+  { label: 'MPP', value: 'MPP' },
+  { label: 'MDP', value: 'MDP' },
+  { label: 'MPM', value: 'MPM' },
+  { label: 'MDS', value: 'MDS' },
+  { label: 'MIPD', value: 'MIPD' },
+  { label: 'MPPM', value: 'MPPM' },
+  { label: 'Ph.D.', value: 'PhD' },
+];
+
+const GENDERS = [
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+  { label: 'Other', value: 'other' },
+];
+
+const CONTINENTS = [
+  { label: 'Asia', value: 'asia' },
+  { label: 'Africa', value: 'africa' },
+  { label: 'Europe', value: 'europe' },
+  { label: 'North America', value: 'north_america' },
+  { label: 'South America', value: 'south_america' },
+  { label: 'Oceania', value: 'oceania' },
+];
+
+const ROLES = [
+  { label: 'Leader (리더)', value: 'leader' },
+  { label: 'Executor (실무)', value: 'executor' },
+  { label: 'Ideator (아이디어)', value: 'ideator' },
+  { label: 'Coordinator (조정자)', value: 'coordinator' },
+];
+
+const SKILLS = [
+  { label: 'Data Analysis', value: 'data_analysis' },
+  { label: 'Research', value: 'research' },
+  { label: 'Writing', value: 'writing' },
+  { label: 'Visual/PPT', value: 'visual' },
+  { label: 'Presentation', value: 'presentation' },
+];
+
+const TIMES = [
+  { label: 'Weekday Daytime', value: 'weekday_daytime' },
+  { label: 'Weekday Evening', value: 'weekday_evening' },
+  { label: 'Weekend', value: 'weekend' },
+];
+
+const GOALS = [
+  { label: 'A+ (최고 성적 목표)', value: 'a_plus' },
+  { label: 'Balanced (균형)', value: 'balanced' },
+  { label: 'Minimum Completion (최소 완성)', value: 'minimum' },
+];
 
 export default function ProfilePage() {
   const params = useParams();
@@ -243,8 +288,8 @@ export default function ProfilePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {MAJORS.map((major) => (
-                      <SelectItem key={major} value={major}>
-                        {major}
+                      <SelectItem key={major.value} value={major.value}>
+                        {major.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -257,13 +302,13 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   {GENDERS.map((gender) => (
                     <Button
-                      key={gender}
+                      key={gender.value}
                       type="button"
-                      variant={formData.gender === gender ? 'default' : 'outline'}
+                      variant={formData.gender === gender.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData({ ...formData, gender })}
+                      onClick={() => setFormData({ ...formData, gender: gender.value })}
                     >
-                      {gender}
+                      {gender.label}
                     </Button>
                   ))}
                 </div>
@@ -275,13 +320,13 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   {CONTINENTS.map((continent) => (
                     <Button
-                      key={continent}
+                      key={continent.value}
                       type="button"
-                      variant={formData.continent === continent ? 'default' : 'outline'}
+                      variant={formData.continent === continent.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData({ ...formData, continent })}
+                      onClick={() => setFormData({ ...formData, continent: continent.value })}
                     >
-                      {continent}
+                      {continent.label}
                     </Button>
                   ))}
                 </div>
@@ -293,13 +338,13 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   {ROLES.map((role) => (
                     <Button
-                      key={role}
+                      key={role.value}
                       type="button"
-                      variant={formData.role === role ? 'default' : 'outline'}
+                      variant={formData.role === role.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData({ ...formData, role })}
+                      onClick={() => setFormData({ ...formData, role: role.value })}
                     >
-                      {role}
+                      {role.label}
                     </Button>
                   ))}
                 </div>
@@ -307,17 +352,17 @@ export default function ProfilePage() {
 
               {/* Skill */}
               <div className="space-y-2">
-                <Label>역량 수준 *</Label>
+                <Label>주요 역량 *</Label>
                 <div className="flex flex-wrap gap-2">
                   {SKILLS.map((skill) => (
                     <Button
-                      key={skill}
+                      key={skill.value}
                       type="button"
-                      variant={formData.skill === skill ? 'default' : 'outline'}
+                      variant={formData.skill === skill.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData({ ...formData, skill })}
+                      onClick={() => setFormData({ ...formData, skill: skill.value })}
                     >
-                      {skill}
+                      {skill.label}
                     </Button>
                   ))}
                 </div>
@@ -328,14 +373,14 @@ export default function ProfilePage() {
                 <Label>선호 시간대 * (복수 선택 가능)</Label>
                 <div className="flex flex-wrap gap-4">
                   {TIMES.map((time) => (
-                    <div key={time} className="flex items-center space-x-2">
+                    <div key={time.value} className="flex items-center space-x-2">
                       <Checkbox
-                        id={time}
-                        checked={formData.times.includes(time)}
-                        onCheckedChange={() => handleTimeToggle(time)}
+                        id={time.value}
+                        checked={formData.times.includes(time.value)}
+                        onCheckedChange={() => handleTimeToggle(time.value)}
                       />
-                      <Label htmlFor={time} className="font-normal cursor-pointer">
-                        {time}
+                      <Label htmlFor={time.value} className="font-normal cursor-pointer">
+                        {time.label}
                       </Label>
                     </div>
                   ))}
@@ -348,15 +393,13 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   {GOALS.map((goal) => (
                     <Button
-                      key={goal}
+                      key={goal.value}
                       type="button"
-                      variant={formData.goal === goal ? 'default' : 'outline'}
+                      variant={formData.goal === goal.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData({ ...formData, goal })}
+                      onClick={() => setFormData({ ...formData, goal: goal.value })}
                     >
-                      {goal === 'Learn' && '배움 중심'}
-                      {goal === 'Complete' && '완수 중심'}
-                      {goal === 'Excel' && '성과 중심'}
+                      {goal.label}
                     </Button>
                   ))}
                 </div>
@@ -364,7 +407,12 @@ export default function ProfilePage() {
 
               {/* Submit */}
               <div className="pt-4">
-                <Button onClick={handleSubmit} disabled={isUpdating} className="w-full">
+                <Button 
+                  type="button"
+                  onClick={handleSubmit} 
+                  disabled={isUpdating} 
+                  className="w-full"
+                >
                   {isUpdating ? '저장 중...' : '프로필 저장'}
                 </Button>
               </div>

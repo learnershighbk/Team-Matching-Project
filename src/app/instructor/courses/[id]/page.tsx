@@ -63,10 +63,22 @@ export default function CourseDetailPage() {
     }
   };
 
-  const handleCopyUrl = () => {
-    const url = `${window.location.origin}/course/${course?.courseId}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: '복사됨', description: '학생 URL이 클립보드에 복사되었습니다' });
+  const handleCopyUrl = async () => {
+    if (!course?.courseId) {
+      toast({ title: '오류', description: '코스 정보를 불러올 수 없습니다', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // 환경 변수에 설정된 URL 우선 사용, 없으면 현재 origin 사용
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const url = `${baseUrl}/course/${course.courseId}`;
+      await navigator.clipboard.writeText(url);
+      toast({ title: '복사됨', description: '학생 URL이 클립보드에 복사되었습니다' });
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      toast({ title: '오류', description: 'URL 복사에 실패했습니다', variant: 'destructive' });
+    }
   };
 
   const handleLock = () => {
@@ -133,8 +145,10 @@ export default function CourseDetailPage() {
     );
   }
 
-  const completedCount = students?.filter((s: StudentStatus) => s.profileCompleted).length || 0;
-  const totalCount = students?.length || 0;
+  // Ensure students is always an array
+  const studentsArray = Array.isArray(students) ? students : [];
+  const completedCount = studentsArray.filter((s: StudentStatus) => s.profileCompleted).length || 0;
+  const totalCount = studentsArray.length || 0;
   const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
@@ -255,7 +269,7 @@ export default function CourseDetailPage() {
           <CardContent>
             {studentsLoading ? (
               <div className="text-center py-8">로딩 중...</div>
-            ) : students?.length === 0 ? (
+            ) : studentsArray.length === 0 ? (
               <p className="text-center py-8 text-muted-foreground">등록된 학생이 없습니다</p>
             ) : (
               <Table>
@@ -269,7 +283,7 @@ export default function CourseDetailPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students?.map((student: StudentStatus) => (
+                  {studentsArray.map((student: StudentStatus) => (
                     <TableRow key={student.studentId}>
                       <TableCell className="font-mono">{student.studentNumber}</TableCell>
                       <TableCell>{student.name || '-'}</TableCell>
