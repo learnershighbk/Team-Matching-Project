@@ -559,29 +559,52 @@ Closes #123
 
 ---
 
-## 10. Project Structure
+## 10. Project Structure (Feature-Sliced Design)
 
 ```
-teammatch/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # Auth 그룹
-│   ├── api/               # API Routes
-│   └── course/            # 학생 페이지
-├── components/            # React 컴포넌트
-│   ├── ui/               # 기본 UI (shadcn)
-│   ├── forms/            # 폼 컴포넌트
-│   ├── layouts/          # 레이아웃
-│   └── shared/           # 공통 컴포넌트
-├── lib/                   # 유틸리티
-│   ├── auth/             # 인증
-│   ├── db/               # DB 쿼리
-│   ├── matching/         # 매칭 알고리즘
-│   ├── supabase/         # Supabase 클라이언트
-│   └── validators/       # Zod 스키마
-├── types/                 # TypeScript 타입
-├── hooks/                 # Custom Hooks
-├── __tests__/            # 테스트
-└── docs/                  # 문서
+src/
+├── app/                      # Next.js App Router (라우팅만)
+│   ├── admin/               # Admin 페이지
+│   ├── instructor/          # Instructor 페이지
+│   ├── course/[uuid]/       # Student 페이지
+│   └── api/[[...hono]]/     # Hono API catch-all
+│
+├── features/                 # 🎯 기능별 모듈
+│   ├── admin/               # feature/{name}/
+│   │   ├── backend/         #   - backend/ (API 로직)
+│   │   ├── components/      #   - components/ (UI)
+│   │   └── hooks/           #   - hooks/ (상태)
+│   ├── instructor/
+│   ├── student/
+│   ├── course/
+│   ├── matching/            # 매칭 알고리즘
+│   └── auth/
+│
+├── backend/                  # Hono 백엔드 공통
+│   ├── hono/                # 앱 인스턴스
+│   └── middleware/          # 공통 미들웨어
+│
+├── components/ui/           # shadcn/ui (공유)
+├── lib/                     # 공유 유틸리티
+├── constants/               # 상수
+├── hooks/                   # 공유 훅
+└── __tests__/              # 테스트
+
+docs/                        # 문서
+```
+
+### 새 Feature 추가 시
+
+```bash
+# 1. feature 디렉토리 생성
+mkdir -p src/features/{name}/{backend,components,hooks}
+
+# 2. 필수 파일 생성
+touch src/features/{name}/backend/{route,schema,service}.ts
+touch src/features/{name}/types.ts
+
+# 3. Hono 앱에 라우트 등록
+# src/backend/hono/app.ts에서 registerXXXRoutes() 호출
 ```
 
 ---

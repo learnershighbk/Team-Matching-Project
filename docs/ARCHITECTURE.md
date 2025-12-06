@@ -1,8 +1,9 @@
 # 🏗️ ARCHITECTURE.md — TeamMatch 시스템 아키텍처
 
 **참조:** PRD.md  
-**버전:** v1.0  
-**최종 업데이트:** 2025-01-06
+**버전:** v1.1  
+**최종 업데이트:** 2025-01-06  
+**아키텍처 패턴:** Feature-Sliced Design
 
 ---
 
@@ -57,139 +58,209 @@
 
 ---
 
-## 3. Folder Structure
+## 3. Folder Structure (Feature-Sliced Design)
+
+본 프로젝트는 **Feature-Sliced Design** 패턴을 채택하여, 기능별로 관련 코드를 응집시킵니다.
 
 ```
-teammatch/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Auth 그룹 (레이아웃 공유)
-│   │   ├── admin/
-│   │   │   ├── page.tsx          # Admin 로그인
-│   │   │   └── dashboard/
-│   │   │       └── page.tsx      # Admin 대시보드
-│   │   └── instructor/
-│   │       ├── page.tsx          # Instructor 로그인
-│   │       └── dashboard/
-│   │           └── page.tsx      # Instructor 대시보드
-│   ├── course/
+src/
+├── app/                            # Next.js App Router (라우팅만 담당)
+│   ├── (protected)/                # 인증 필요 공통 레이아웃
+│   │   ├── layout.tsx
+│   │   └── dashboard/
+│   │       └── page.tsx
+│   ├── admin/                      # Admin 페이지
+│   │   ├── page.tsx                # Admin 로그인
+│   │   └── dashboard/
+│   │       └── page.tsx            # Admin 대시보드
+│   ├── instructor/                 # Instructor 페이지
+│   │   ├── page.tsx                # Instructor 로그인
+│   │   └── dashboard/
+│   │       └── page.tsx            # Instructor 대시보드
+│   ├── course/                     # Student 페이지
 │   │   └── [uuid]/
-│   │       ├── page.tsx          # 학생 인증
+│   │       ├── page.tsx            # 학생 인증
 │   │       ├── profile/
-│   │       │   └── page.tsx      # 프로필 입력/수정
+│   │       │   └── page.tsx        # 프로필 입력/수정
 │   │       └── team/
-│   │           └── page.tsx      # 팀 결과 확인
-│   ├── api/                      # API Routes
-│   │   ├── admin/
-│   │   │   ├── login/route.ts
-│   │   │   ├── instructors/route.ts
-│   │   │   ├── instructors/[id]/route.ts
-│   │   │   ├── students/[id]/reset-pin/route.ts
-│   │   │   └── courses/route.ts
-│   │   ├── instructor/
-│   │   │   ├── login/route.ts
-│   │   │   ├── courses/route.ts
-│   │   │   └── courses/[id]/
-│   │   │       ├── route.ts
-│   │   │       ├── students/route.ts
-│   │   │       ├── lock/route.ts
-│   │   │       ├── match/route.ts
-│   │   │       ├── confirm/route.ts
-│   │   │       └── teams/route.ts
-│   │   ├── student/
-│   │   │   ├── auth/route.ts
-│   │   │   ├── profile/route.ts
-│   │   │   └── team/route.ts
-│   │   └── course/
-│   │       └── [uuid]/
-│   │           └── status/route.ts
-│   ├── layout.tsx
-│   ├── page.tsx                  # 랜딩 (리다이렉트)
+│   │           └── page.tsx        # 팀 결과 확인
+│   ├── api/                        # API Routes (Hono catch-all)
+│   │   └── [[...hono]]/
+│   │       └── route.ts            # 모든 API를 Hono로 위임
+│   ├── layout.tsx                  # 루트 레이아웃
+│   ├── page.tsx                    # 랜딩 페이지
+│   ├── providers.tsx               # 전역 Provider
 │   └── globals.css
-├── components/                   # 재사용 컴포넌트
-│   ├── ui/                       # shadcn/ui 컴포넌트
-│   │   ├── button.tsx
-│   │   ├── input.tsx
-│   │   ├── select.tsx
-│   │   ├── card.tsx
-│   │   └── ...
-│   ├── forms/                    # 폼 컴포넌트
-│   │   ├── LoginForm.tsx
-│   │   ├── ProfileForm.tsx
-│   │   └── CourseForm.tsx
-│   ├── layouts/                  # 레이아웃 컴포넌트
-│   │   ├── AdminLayout.tsx
-│   │   ├── InstructorLayout.tsx
-│   │   └── StudentLayout.tsx
-│   └── shared/                   # 공통 컴포넌트
-│       ├── Loading.tsx
-│       ├── ErrorBoundary.tsx
-│       └── Toast.tsx
-├── lib/                          # 유틸리티
-│   ├── supabase/
-│   │   ├── client.ts             # 브라우저용 클라이언트
-│   │   └── server.ts             # 서버용 클라이언트
+│
+├── features/                       # 🎯 기능별 모듈 (핵심)
+│   ├── admin/                      # Admin 기능
+│   │   ├── backend/                # API 로직
+│   │   │   ├── route.ts            # Hono 라우트 등록
+│   │   │   ├── schema.ts           # Zod 검증 스키마
+│   │   │   └── service.ts          # 비즈니스 로직
+│   │   ├── components/             # Admin 전용 컴포넌트
+│   │   ├── hooks/                  # Admin 전용 훅
+│   │   └── types.ts                # Admin 타입 정의
+│   ├── instructor/                 # Instructor 기능
+│   │   ├── backend/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── types.ts
+│   ├── student/                    # Student 기능
+│   │   ├── backend/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── types.ts
+│   ├── course/                     # Course 관련 기능
+│   │   ├── backend/
+│   │   ├── components/
+│   │   └── types.ts
+│   ├── matching/                   # 매칭 알고리즘
+│   │   ├── algorithm.ts            # 메인 매칭 로직
+│   │   ├── scoring.ts              # 점수 계산
+│   │   ├── optimizer.ts            # Local Swap 최적화
+│   │   ├── slots.ts                # 팀 슬롯 생성 (낙오자 방지)
+│   │   ├── weights.ts              # 가중치 프로파일
+│   │   └── types.ts
+│   └── auth/                       # 인증 기능
+│       ├── context/
+│       │   └── current-user-context.tsx
+│       ├── hooks/
+│       │   └── useCurrentUser.ts
+│       ├── server/
+│       │   └── load-current-user.ts
+│       └── types.ts
+│
+├── backend/                        # Hono 백엔드 공통 설정
+│   ├── hono/
+│   │   ├── app.ts                  # Hono 앱 인스턴스 & 라우트 등록
+│   │   └── context.ts              # Hono Context 타입
+│   ├── middleware/
+│   │   ├── context.ts              # 앱 컨텍스트 미들웨어
+│   │   ├── error.ts                # 에러 처리 미들웨어
+│   │   └── supabase.ts             # Supabase 클라이언트 주입
+│   ├── http/
+│   │   └── response.ts             # 표준 응답 헬퍼
+│   └── supabase/
+│       └── client.ts               # 서버용 Supabase 클라이언트
+│
+├── components/                     # 공유 UI 컴포넌트
+│   └── ui/                         # shadcn/ui 컴포넌트
+│       ├── button.tsx
+│       ├── input.tsx
+│       ├── card.tsx
+│       ├── form.tsx
+│       ├── select.tsx
+│       └── ...
+│
+├── lib/                            # 공유 유틸리티
 │   ├── auth/
-│   │   ├── jwt.ts                # JWT 생성/검증
-│   │   ├── hash.ts               # bcrypt 해싱
-│   │   └── middleware.ts         # 인증 미들웨어
-│   ├── matching/
-│   │   ├── algorithm.ts          # 매칭 알고리즘
-│   │   ├── scoring.ts            # 점수 계산
-│   │   └── optimizer.ts          # 최적화 로직
-│   ├── validators/
-│   │   ├── auth.ts               # 인증 검증
-│   │   ├── profile.ts            # 프로필 검증
-│   │   └── course.ts             # 코스 검증
-│   └── constants/
-│       ├── weights.ts            # 가중치 프로파일
-│       ├── enums.ts              # Enum 정의
-│       └── errors.ts             # 에러 코드
-├── types/                        # TypeScript 타입
-│   ├── database.ts               # DB 스키마 타입
-│   ├── api.ts                    # API Request/Response
-│   └── auth.ts                   # Auth 관련 타입
-├── hooks/                        # Custom Hooks
-│   ├── useAuth.ts
-│   ├── useCourse.ts
-│   └── useProfile.ts
-├── middleware.ts                 # Next.js Middleware
-├── next.config.js
-├── tailwind.config.js
+│   │   ├── jwt.ts                  # JWT 생성/검증
+│   │   ├── hash.ts                 # bcrypt 해싱
+│   │   └── cookie.ts               # Cookie 관리
+│   ├── supabase/
+│   │   ├── types.ts                # DB 타입 정의
+│   │   ├── browser-client.ts       # 브라우저용 클라이언트
+│   │   └── server-client.ts        # 서버용 클라이언트
+│   ├── remote/
+│   │   └── api-client.ts           # 프론트엔드 API 클라이언트
+│   └── utils.ts                    # 공통 유틸리티
+│
+├── constants/                      # 상수 정의
+│   ├── auth.ts                     # 인증 관련 상수
+│   └── env.ts                      # 환경 변수 검증
+│
+├── hooks/                          # 공유 훅
+│   └── use-toast.ts
+│
+├── middleware.ts                   # Next.js Middleware (루트)
+├── next.config.ts
+├── tailwind.config.ts
 ├── tsconfig.json
 ├── package.json
-└── .env.local                    # 환경변수
+└── .env.local                      # 환경변수
+```
+
+### 3.1 Feature 모듈 구조 (상세)
+
+각 feature는 다음 구조를 따릅니다:
+
+```
+features/{feature-name}/
+├── backend/                  # 서버 사이드 (API 로직)
+│   ├── route.ts             # Hono 라우트 정의
+│   ├── schema.ts            # Zod 검증 스키마
+│   └── service.ts           # 비즈니스 로직 (DB 쿼리 등)
+├── components/              # 클라이언트 컴포넌트
+│   └── FeatureComponent.tsx
+├── hooks/                   # 클라이언트 훅
+│   └── useFeature.ts
+├── lib/                     # feature 전용 유틸리티
+│   └── helpers.ts
+└── types.ts                 # 타입 정의
+```
+
+### 3.2 API 라우트 구조 (Hono)
+
+```typescript
+// src/backend/hono/app.ts
+import { Hono } from 'hono';
+import { registerAdminRoutes } from '@/features/admin/backend/route';
+import { registerInstructorRoutes } from '@/features/instructor/backend/route';
+import { registerStudentRoutes } from '@/features/student/backend/route';
+import { registerCourseRoutes } from '@/features/course/backend/route';
+
+const app = new Hono();
+
+// 공통 미들웨어
+app.use('*', errorBoundary());
+app.use('*', withAppContext());
+app.use('*', withSupabase());
+
+// 기능별 라우트 등록
+registerAdminRoutes(app);       // /api/admin/*
+registerInstructorRoutes(app);  // /api/instructor/*
+registerStudentRoutes(app);     // /api/student/*
+registerCourseRoutes(app);      // /api/course/*
+
+export { app };
 ```
 
 ---
 
 ## 4. Component Architecture
 
-### 4.1 컴포넌트 계층
+### 4.1 컴포넌트 계층 (Feature-Sliced)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Pages                                 │
-│  (app/*/page.tsx - 라우팅, 데이터 페칭, 레이아웃 조합)         │
+│  (src/app/*/page.tsx - 라우팅, 데이터 페칭)                  │
+│  Server Components (기본)                                   │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Layouts                                 │
-│  (components/layouts/* - 역할별 공통 레이아웃)               │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Feature Components                         │
-│  (components/forms/*, 도메인 특화 컴포넌트)                  │
+│                  Feature Components                          │
+│  (src/features/*/components/* - 기능별 컴포넌트)            │
+│  'use client' 필요 시 명시                                  │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    UI Components                             │
-│  (components/ui/* - shadcn/ui 기반 원자 컴포넌트)            │
+│  (src/components/ui/* - shadcn/ui 기반)                     │
+│  재사용 가능한 원자 컴포넌트                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### 4.2 컴포넌트 위치 결정 기준
+
+| 위치 | 기준 | 예시 |
+|------|------|------|
+| `features/*/components/` | 특정 기능에서만 사용 | `InstructorDashboard`, `ProfileForm` |
+| `components/ui/` | 범용 UI, shadcn/ui | `Button`, `Input`, `Card` |
+| `app/*/page.tsx` | 라우트 진입점 | 페이지 컴포넌트 |
 
 ### 4.2 상태 관리
 
@@ -206,9 +277,11 @@ teammatch/
 
 ---
 
-## 5. API Architecture
+## 5. API Architecture (Hono)
 
 ### 5.1 API Route 패턴
+
+본 프로젝트는 **Hono**를 사용하여 API를 구현합니다. Next.js의 catch-all 라우트(`[[...hono]]`)로 모든 API 요청을 Hono로 위임합니다.
 
 ```typescript
 // 표준 API Response 형식
@@ -221,32 +294,35 @@ interface ApiResponse<T> {
   };
 }
 
-// 표준 API Handler 패턴
-export async function POST(request: Request) {
-  try {
-    // 1. 인증 검증
-    const auth = await verifyAuth(request);
-    if (!auth.valid) {
-      return Response.json({ 
+// Hono 라우트 패턴 (features/*/backend/route.ts)
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { loginSchema } from './schema';
+import { AdminService } from './service';
+
+export function registerAdminRoutes(app: Hono) {
+  const admin = new Hono();
+
+  // POST /api/admin/login
+  admin.post('/login', zValidator('json', loginSchema), async (c) => {
+    const body = c.req.valid('json');
+    
+    const result = await AdminService.login(body.email, body.password);
+    
+    if (!result.success) {
+      return c.json({ 
         success: false, 
         error: { code: 'AUTH_003', message: '인증 실패' } 
-      }, { status: 401 });
+      }, 401);
     }
     
-    // 2. 입력 검증
-    const body = await request.json();
-    const validated = schema.parse(body);
+    // Cookie 설정
+    setCookie(c, 'token', result.token, { httpOnly: true, ... });
     
-    // 3. 비즈니스 로직
-    const result = await businessLogic(validated);
-    
-    // 4. 응답
-    return Response.json({ success: true, data: result });
-    
-  } catch (error) {
-    // 5. 에러 처리
-    return handleError(error);
-  }
+    return c.json({ success: true, data: result.data });
+  });
+
+  app.route('/api/admin', admin);
 }
 ```
 

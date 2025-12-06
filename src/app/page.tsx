@@ -4,8 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Copy, CheckCircle2, Boxes, Database, LogOut, Server } from "lucide-react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
-import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useAuth } from "@/lib/auth/auth-context";
 
 type SetupCommand = {
   id: string;
@@ -77,15 +76,22 @@ const backendBuildingBlocks = [
 
 export default function Home() {
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-  const { user, isAuthenticated, isLoading, refresh } = useCurrentUser();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
 
   const handleSignOut = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    await refresh();
+    await logout();
     router.replace("/");
-  }, [refresh, router]);
+  }, [logout, router]);
+
+  // 사용자 표시 이름 결정
+  const displayName = useMemo(() => {
+    if (!user) return null;
+    if (user.role === "admin") return user.email;
+    if (user.role === "instructor") return user.email;
+    if (user.role === "student") return `학번: ${user.studentNumber}`;
+    return null;
+  }, [user]);
 
   const authActions = useMemo(() => {
     if (isLoading) {
@@ -97,7 +103,7 @@ export default function Home() {
     if (isAuthenticated && user) {
       return (
         <div className="flex items-center gap-3 text-sm text-slate-200">
-          <span className="truncate">{user.email ?? "알 수 없는 사용자"}</span>
+          <span className="truncate">{displayName ?? "알 수 없는 사용자"}</span>
           <div className="flex items-center gap-2">
             <Link
               href="/dashboard"
@@ -134,7 +140,7 @@ export default function Home() {
         </Link>
       </div>
     );
-  }, [handleSignOut, isAuthenticated, isLoading, user]);
+  }, [displayName, handleSignOut, isAuthenticated, isLoading, user]);
 
   const handleCopy = (command: string) => {
     navigator.clipboard.writeText(command);

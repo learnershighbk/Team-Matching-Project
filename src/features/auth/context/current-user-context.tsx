@@ -1,3 +1,11 @@
+/**
+ * @deprecated 이 파일은 템플릿 잔재입니다.
+ *
+ * TeamMatch 프로젝트는 자체 JWT 인증을 사용합니다.
+ * 대신 @/lib/auth/auth-context의 AuthProvider와 useAuth를 사용하세요.
+ *
+ * 마이그레이션 완료 후 이 파일은 삭제됩니다.
+ */
 "use client";
 
 import {

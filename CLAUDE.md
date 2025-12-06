@@ -19,40 +19,60 @@
 | Category | Technology |
 |----------|------------|
 | Framework | Next.js 14 (App Router) |
+| API Layer | Hono (lightweight web framework) |
 | Language | TypeScript |
 | Database | Supabase (PostgreSQL) |
 | Auth | JWT (jose) + bcryptjs |
 | Styling | Tailwind CSS + shadcn/ui |
-| Validation | Zod |
+| Validation | Zod + @hono/zod-validator |
 | Testing | Jest + Playwright |
 | Deploy | Vercel |
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Structure (Feature-Sliced Design)
 
 ```
-teammatch/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # 인증 필요 페이지
-│   │   ├── admin/         # Admin 페이지
-│   │   └── instructor/    # Instructor 페이지
-│   ├── course/[uuid]/     # Student 페이지
-│   ├── api/               # API Routes
+src/
+├── app/                      # Next.js App Router (라우팅만)
+│   ├── admin/               # Admin 페이지
+│   ├── instructor/          # Instructor 페이지
+│   ├── course/[uuid]/       # Student 페이지
+│   ├── api/[[...hono]]/     # Hono API catch-all
 │   └── layout.tsx
-├── components/            # React 컴포넌트
-│   ├── ui/               # shadcn/ui
-│   ├── forms/
-│   └── shared/
-├── lib/                   # 유틸리티
-│   ├── auth/             # JWT, 해싱
-│   ├── matching/         # 매칭 알고리즘
-│   ├── supabase/         # DB 클라이언트
-│   └── validators/       # Zod 스키마
-├── types/                 # TypeScript 타입
-├── docs/                  # 문서
-├── prompts/              # 단계별 프롬프트
-└── claude/agents/        # 에이전트 가이드
+│
+├── features/                 # 🎯 기능별 모듈 (핵심!)
+│   ├── admin/               # Admin 기능
+│   │   ├── backend/         # API 로직, 스키마, 서비스
+│   │   ├── components/      # Admin 전용 컴포넌트
+│   │   └── hooks/           # Admin 전용 훅
+│   ├── instructor/          # Instructor 기능
+│   ├── student/             # Student 기능
+│   ├── course/              # Course 기능
+│   ├── matching/            # 매칭 알고리즘
+│   └── auth/                # 인증 기능
+│
+├── backend/                  # Hono 백엔드 공통
+│   ├── hono/                # Hono 앱 & 라우트 등록
+│   └── middleware/          # 공통 미들웨어
+│
+├── components/ui/           # shadcn/ui 컴포넌트
+├── lib/                     # 공유 유틸리티 (auth, supabase)
+├── constants/               # 상수 (env, auth)
+└── hooks/                   # 공유 훅
+
+docs/                        # 문서
+prompts/                     # 단계별 프롬프트
+claude/agents/               # 에이전트 가이드
+```
+
+### Feature 모듈 패턴
+```
+features/{name}/
+├── backend/           # API 로직 (route.ts, schema.ts, service.ts)
+├── components/        # 기능 전용 컴포넌트
+├── hooks/             # 기능 전용 훅
+└── types.ts           # 타입 정의
 ```
 
 ---
@@ -171,9 +191,25 @@ npm run lint
 
 > 이 섹션에 현재 작업 중인 내용을 기록합니다.
 
-**Phase:** [현재 단계]
-**Task:** [현재 작업]
-**Status:** [진행 상태]
+**Phase:** Phase 1 - Foundation
+**Task:** 기술 검토 완료, 문서 구조 정비
+**Status:** 진행 중
+
+### 완료된 작업:
+- [x] 프로젝트 셋업 (Next.js, Supabase, shadcn/ui)
+- [x] DB 마이그레이션 파일 작성 (0002~0008)
+- [x] JWT 인증 유틸리티 구현
+- [x] 환경 변수 검증 설정
+- [x] Hono 백엔드 기본 설정
+- [x] 미들웨어 기본 구조
+
+### 다음 작업:
+- [ ] RLS 정책 수정 (Service Role 조건)
+- [ ] 트리거 함수 수정 (times NULL 체크)
+- [ ] Admin API 라우트 구현
+- [ ] Instructor API 라우트 구현
+- [ ] Student API 라우트 구현
+- [ ] 매칭 알고리즘 구현
 
 ---
 
