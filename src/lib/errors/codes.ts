@@ -24,6 +24,8 @@ export const COURSE_ERROR_CODES = {
   CANNOT_MODIFY: 'COURSE_003', // 해당 상태에서 수정 불가
   ALREADY_LOCKED: 'COURSE_004', // 이미 해당 상태임
   CANNOT_MATCH: 'COURSE_005', // 해당 상태에서 작업 불가
+  FETCH_ERROR: 'COURSE_006', // 데이터 조회/처리 오류
+  VALIDATION_ERROR: 'COURSE_007', // 유효성 검사 오류
 } as const;
 
 /**
@@ -41,6 +43,8 @@ export const MATCH_ERROR_CODES = {
 export const ADMIN_ERROR_CODES = {
   DUPLICATE_EMAIL: 'ADMIN_001', // 중복 이메일
   CANNOT_DELETE: 'ADMIN_002', // 삭제 불가 (연관 데이터 존재)
+  FETCH_ERROR: 'ADMIN_003', // 데이터 조회/처리 오류
+  NOT_FOUND: 'ADMIN_004', // 리소스를 찾을 수 없음
 } as const;
 
 /**
@@ -70,6 +74,8 @@ export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   [COURSE_ERROR_CODES.CANNOT_MODIFY]: 403,
   [COURSE_ERROR_CODES.ALREADY_LOCKED]: 400,
   [COURSE_ERROR_CODES.CANNOT_MATCH]: 400,
+  [COURSE_ERROR_CODES.FETCH_ERROR]: 500,
+  [COURSE_ERROR_CODES.VALIDATION_ERROR]: 400,
   
   // MATCH
   [MATCH_ERROR_CODES.INSUFFICIENT_STUDENTS]: 400,
@@ -79,6 +85,8 @@ export const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   // ADMIN
   [ADMIN_ERROR_CODES.DUPLICATE_EMAIL]: 400,
   [ADMIN_ERROR_CODES.CANNOT_DELETE]: 400,
+  [ADMIN_ERROR_CODES.FETCH_ERROR]: 500,
+  [ADMIN_ERROR_CODES.NOT_FOUND]: 404,
 };
 
 /**
@@ -98,6 +106,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [COURSE_ERROR_CODES.CANNOT_MODIFY]: '해당 상태에서 수정할 수 없습니다',
   [COURSE_ERROR_CODES.ALREADY_LOCKED]: '이미 해당 상태입니다',
   [COURSE_ERROR_CODES.CANNOT_MATCH]: '해당 상태에서 매칭을 실행할 수 없습니다',
+  [COURSE_ERROR_CODES.FETCH_ERROR]: '데이터 조회 중 오류가 발생했습니다',
+  [COURSE_ERROR_CODES.VALIDATION_ERROR]: '입력값이 유효하지 않습니다',
   
   // MATCH
   [MATCH_ERROR_CODES.INSUFFICIENT_STUDENTS]: '매칭을 실행하기에는 학생 수가 부족합니다',
@@ -107,5 +117,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   // ADMIN
   [ADMIN_ERROR_CODES.DUPLICATE_EMAIL]: '이미 등록된 이메일입니다',
   [ADMIN_ERROR_CODES.CANNOT_DELETE]: '연관된 데이터가 있어 삭제할 수 없습니다',
+  [ADMIN_ERROR_CODES.FETCH_ERROR]: '데이터 조회 중 오류가 발생했습니다',
+  [ADMIN_ERROR_CODES.NOT_FOUND]: '리소스를 찾을 수 없습니다',
 };
 

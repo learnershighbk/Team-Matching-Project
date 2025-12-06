@@ -1,4 +1,4 @@
-import type { Hono } from 'hono';
+import { Hono } from 'hono';
 import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase, getLogger } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
@@ -69,9 +69,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
 
     if (!result.ok) {
       const errorResult = result as ErrorResult<AdminServiceError, unknown>;
-      if (errorResult.error.code === adminErrorCodes.fetchError) {
-        logger.error('Failed to create instructor', errorResult.error.message);
-      }
+      logger.error('Failed to create instructor', errorResult.error.message);
     }
 
     return respond(c, result);
@@ -101,9 +99,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
 
     if (!result.ok) {
       const errorResult = result as ErrorResult<AdminServiceError, unknown>;
-      if (errorResult.error.code === adminErrorCodes.fetchError) {
-        logger.error('Failed to update instructor', errorResult.error.message);
-      }
+      logger.error('Failed to update instructor', errorResult.error.message);
     }
 
     return respond(c, result);
@@ -119,9 +115,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
 
     if (!result.ok) {
       const errorResult = result as ErrorResult<AdminServiceError, unknown>;
-      if (errorResult.error.code === adminErrorCodes.fetchError) {
-        logger.error('Failed to delete instructor', errorResult.error.message);
-      }
+      logger.error('Failed to delete instructor', errorResult.error.message);
     }
 
     return respond(c, result);
@@ -147,9 +141,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
 
     if (!result.ok) {
       const errorResult = result as ErrorResult<AdminServiceError, unknown>;
-      if (errorResult.error.code === adminErrorCodes.fetchError) {
-        logger.error('Failed to reset student PIN', errorResult.error.message);
-      }
+      logger.error('Failed to reset student PIN', errorResult.error.message);
     }
 
     return respond(c, result);
@@ -183,9 +175,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
 
     if (!result.ok) {
       const errorResult = result as ErrorResult<AdminServiceError, unknown>;
-      if (errorResult.error.code === adminErrorCodes.fetchError) {
-        logger.error('Failed to update course deadline', errorResult.error.message);
-      }
+      logger.error('Failed to update course deadline', errorResult.error.message);
     }
 
     return respond(c, result);

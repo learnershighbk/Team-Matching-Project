@@ -1,8 +1,8 @@
-import { 
-  COURSE_ERROR_CODES, 
+import {
+  COURSE_ERROR_CODES,
   MATCH_ERROR_CODES,
   type CourseErrorCode,
-  type MatchErrorCode 
+  type MatchErrorCode
 } from '@/lib/errors/codes';
 
 export const instructorErrorCodes = {
@@ -11,6 +11,8 @@ export const instructorErrorCodes = {
   cannotModify: COURSE_ERROR_CODES.CANNOT_MODIFY,
   alreadyLocked: COURSE_ERROR_CODES.ALREADY_LOCKED,
   cannotMatch: COURSE_ERROR_CODES.CANNOT_MATCH,
+  fetchError: COURSE_ERROR_CODES.FETCH_ERROR,
+  validationError: COURSE_ERROR_CODES.VALIDATION_ERROR,
   matchInsufficientStudents: MATCH_ERROR_CODES.INSUFFICIENT_STUDENTS,
   alreadyConfirmed: MATCH_ERROR_CODES.ALREADY_CONFIRMED,
   matchNotRun: MATCH_ERROR_CODES.NOT_RUN,

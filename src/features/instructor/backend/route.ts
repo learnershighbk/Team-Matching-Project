@@ -1,10 +1,10 @@
-import type { Hono } from 'hono';
+import { Hono } from 'hono';
 import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase, getLogger, getAuth } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
 import { failure, respond, type ErrorResult } from '@/backend/http/response';
 import { zodErrorToResponse } from '@/lib/errors';
-import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema } from './schema';
+import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema, type CreateCourseInput } from './schema';
 import {
   getCourses,
   createCourse,

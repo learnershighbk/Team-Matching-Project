@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { success, failure, type HandlerResult } from '@/backend/http/response';
 import { studentErrorCodes, type StudentServiceError } from './error';
 import type { StudentProfile, Team } from '../types';
+import type { UpdateProfileInput } from './schema';
 
 /**
  * Student Feature 비즈니스 로직
@@ -81,17 +82,7 @@ export async function getProfile(
 export async function updateProfile(
   supabase: SupabaseClient,
   studentId: string,
-  data: {
-    name: string;
-    email: string;
-    major: string;
-    gender: string;
-    continent: string;
-    role: string;
-    skill: string;
-    times: string[];
-    goal: string;
-  }
+  data: UpdateProfileInput
 ): Promise<HandlerResult<{ profileCompleted: boolean; message: string }, StudentServiceError, unknown>> {
   // 코스 마감일 확인
   const { data: student, error: studentError } = await supabase

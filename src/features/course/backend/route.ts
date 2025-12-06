@@ -1,4 +1,4 @@
-import type { Hono } from 'hono';
+import { Hono } from 'hono';
 import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase } from '@/backend/hono/context';
 import { respond } from '@/backend/http/response';

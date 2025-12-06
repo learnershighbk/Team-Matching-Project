@@ -5,12 +5,13 @@
  */
 
 import { failure } from '@/backend/http/response';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { ErrorCode } from './codes';
 import { ERROR_STATUS_MAP, ERROR_MESSAGES } from './codes';
 
 /**
  * 에러 코드로부터 실패 응답 생성
- * 
+ *
  * @param code 에러 코드
  * @param customMessage 커스텀 메시지 (선택적)
  * @param details 추가 상세 정보 (선택적)
@@ -20,9 +21,9 @@ export function createErrorResponse<TDetails = unknown>(
   customMessage?: string,
   details?: TDetails
 ) {
-  const status = ERROR_STATUS_MAP[code];
+  const status = ERROR_STATUS_MAP[code] as ContentfulStatusCode;
   const message = customMessage || ERROR_MESSAGES[code];
-  
+
   return failure(status, code, message, details);
 }
 

@@ -16,6 +16,9 @@ export type AppVariables = {
   logger: AppLogger;
   config: AppConfig;
   auth?: TokenPayload;
+  validated?: unknown;
+  validatedParams?: unknown;
+  validatedQuery?: unknown;
 };
 
 export type AppEnv = {
@@ -29,6 +32,9 @@ export const contextKeys = {
   logger: 'logger',
   config: 'config',
   auth: 'auth',
+  validated: 'validated',
+  validatedParams: 'validatedParams',
+  validatedQuery: 'validatedQuery',
 } as const;
 
 export const getSupabase = (c: AppContext) =>

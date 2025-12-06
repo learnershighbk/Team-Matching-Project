@@ -4,15 +4,18 @@
 
 export type Course = {
   courseId: string;
-  instructorId: string;
+  instructorId?: string;
   courseName: string;
   courseCode: string;
   teamSize: number;
   weightProfile: string;
   deadline: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  studentCount?: number;
+  completedCount?: number;
+  accessUrl?: string;
 };
 
 export type StudentStatus = {

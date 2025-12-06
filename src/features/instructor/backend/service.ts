@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { success, failure, type HandlerResult } from '@/backend/http/response';
 import { instructorErrorCodes, type InstructorServiceError } from './error';
 import type { Course, StudentStatus, Team } from '../types';
+import type { CreateCourseInput, UpdateCourseInput } from './schema';
 
 /**
  * Instructor Feature 비즈니스 로직
@@ -56,13 +57,7 @@ export async function getCourses(
 export async function createCourse(
   supabase: SupabaseClient,
   instructorId: string,
-  data: {
-    courseName: string;
-    courseCode: string;
-    teamSize: number;
-    weightProfile: string;
-    deadline: string;
-  }
+  data: CreateCourseInput
 ): Promise<HandlerResult<{ courseId: string; courseName: string; courseCode: string; accessUrl: string }, InstructorServiceError, unknown>> {
   // deadline 검증 (현재 시간 이후)
   const deadlineDate = new Date(data.deadline);

@@ -1,4 +1,4 @@
-import type { Hono } from "hono";
+import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { failure, success, respond } from "@/backend/http/response";
 import type { AppEnv } from "@/backend/hono/context";

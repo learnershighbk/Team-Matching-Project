@@ -1,4 +1,4 @@
-import type { Hono } from 'hono';
+import { Hono } from 'hono';
 import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase, getLogger, getAuth } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
