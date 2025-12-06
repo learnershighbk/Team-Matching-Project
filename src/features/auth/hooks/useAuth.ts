@@ -34,8 +34,8 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<AuthUser | null>>('/api/auth/me');
-      return data.data;
+      const { data } = await apiClient.get<AuthUser | null>('/api/auth/me');
+      return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
@@ -49,11 +49,20 @@ export function useAdminLogin() {
 
   return useMutation({
     mutationFn: async (credentials: AdminLoginData) => {
-      const { data } = await apiClient.post<ApiResponse<AuthUser>>('/api/admin/login', credentials);
-      if (!data.success) {
-        throw new Error(data.error?.message || '로그인에 실패했습니다');
+      try {
+        const { data } = await apiClient.post<AuthUser | { error: { code: string; message: string } }>('/api/admin/login', credentials);
+        
+        // 에러 응답 확인
+        if (data && 'error' in data) {
+          throw new Error(data.error.message || '로그인에 실패했습니다');
+        }
+        
+        // 성공 응답
+        return data as AuthUser;
+      } catch (error) {
+        const message = extractApiErrorMessage(error, '로그인에 실패했습니다');
+        throw new Error(message);
       }
-      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
@@ -72,11 +81,20 @@ export function useInstructorLogin() {
 
   return useMutation({
     mutationFn: async (credentials: InstructorLoginData) => {
-      const { data } = await apiClient.post<ApiResponse<AuthUser>>('/api/instructor/login', credentials);
-      if (!data.success) {
-        throw new Error(data.error?.message || '로그인에 실패했습니다');
+      try {
+        const { data } = await apiClient.post<AuthUser | { error: { code: string; message: string } }>('/api/instructor/login', credentials);
+        
+        // 에러 응답 확인
+        if (data && 'error' in data) {
+          throw new Error(data.error.message || '로그인에 실패했습니다');
+        }
+        
+        // 성공 응답
+        return data as AuthUser;
+      } catch (error) {
+        const message = extractApiErrorMessage(error, '로그인에 실패했습니다');
+        throw new Error(message);
       }
-      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
@@ -94,16 +112,30 @@ export function useStudentAuth() {
 
   return useMutation({
     mutationFn: async (authData: StudentAuthData) => {
-      const { data } = await apiClient.post<ApiResponse<{
-        studentId: string;
-        studentNumber: string;
-        profileCompleted: boolean;
-        courseStatus: string;
-      }>>('/api/student/auth', authData);
-      if (!data.success) {
-        throw new Error(data.error?.message || '인증에 실패했습니다');
+      try {
+        const { data } = await apiClient.post<{
+          studentId: string;
+          studentNumber: string;
+          profileCompleted: boolean;
+          courseStatus: string;
+        } | { error: { code: string; message: string } }>('/api/student/auth', authData);
+        
+        // 에러 응답 확인
+        if (data && 'error' in data) {
+          throw new Error(data.error.message || '인증에 실패했습니다');
+        }
+        
+        // 성공 응답
+        return data as {
+          studentId: string;
+          studentNumber: string;
+          profileCompleted: boolean;
+          courseStatus: string;
+        };
+      } catch (error) {
+        const message = extractApiErrorMessage(error, '인증에 실패했습니다');
+        throw new Error(message);
       }
-      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
@@ -121,8 +153,7 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      const { data } = await apiClient.post<ApiResponse<null>>('/api/auth/logout');
-      return data;
+      await apiClient.post<null>('/api/auth/logout');
     },
     onSuccess: () => {
       queryClient.clear();

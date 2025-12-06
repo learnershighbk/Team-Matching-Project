@@ -36,8 +36,16 @@ import { hashPassword } from '@/lib/auth/hash';
 export const registerAdminRoutes = (app: Hono<AppEnv>) => {
   const admin = new Hono<AppEnv>();
 
-  // 모든 Admin 라우트는 인증 필요
-  admin.use('*', requireAuth(['admin']));
+  // 모든 Admin 라우트는 인증 필요 (로그인 제외)
+  admin.use('*', async (c, next) => {
+    // /login 경로는 인증 불필요
+    const path = c.req.path;
+    if (path === '/login' || path.endsWith('/login')) {
+      return next();
+    }
+    // 인증 미들웨어 적용
+    return requireAuth(['admin'])(c, next);
+  });
 
   // 교수자 목록 조회
   admin.get('/instructors', async (c) => {

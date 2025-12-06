@@ -46,12 +46,20 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
 
   const refresh = useCallback(async () => {
     setStatus("loading");
-    const result = await authApi.getCurrentUser();
+    try {
+      const result = await authApi.getCurrentUser();
 
-    if (result.success && result.data) {
-      setUser(result.data);
-      setStatus("authenticated");
-    } else {
+      // result가 null이거나 유효하지 않은 경우 안전하게 처리
+      if (result && result.success && result.data !== undefined) {
+        setUser(result.data);
+        setStatus("authenticated");
+      } else {
+        setUser(null);
+        setStatus("unauthenticated");
+      }
+    } catch (error) {
+      // 예외 발생 시에도 안전하게 처리
+      console.error("Failed to refresh auth:", error);
       setUser(null);
       setStatus("unauthenticated");
     }

@@ -7,7 +7,10 @@
       "Bash(dir /s /b src*.test.ts src*.test.tsx src*.spec.ts src*.spec.tsx)",
       "Bash(dir:*)",
       "Bash(cat:*)",
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "Bash(findstr:*)",
+      "Bash(npx playwright install chromium)",
+      "Bash(npm run test:e2e:*)"
     ],
     "deny": [],
     "ask": []

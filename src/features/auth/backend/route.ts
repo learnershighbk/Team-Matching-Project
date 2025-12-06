@@ -19,20 +19,21 @@ import { AUTH_ERROR_CODES, COURSE_ERROR_CODES } from "@/lib/errors/codes";
 /**
  * TeamMatch 인증 라우트
  *
- * - GET /auth/me: 현재 사용자 조회
- * - POST /auth/logout: 로그아웃
- * - POST /admin/login: Admin 로그인
- * - POST /instructor/login: Instructor 로그인 (TODO)
- * - POST /student/auth: Student 인증 (TODO)
+ * - GET /api/auth/me: 현재 사용자 조회
+ * - POST /api/auth/logout: 로그아웃
+ * - POST /api/admin/login: Admin 로그인
+ * - POST /api/instructor/login: Instructor 로그인
+ * - POST /api/student/auth: Student 인증
  */
 
 export const registerAuthRoutes = (app: Hono<AppEnv>) => {
   // 현재 사용자 조회
-  app.get("/auth/me", async (c) => {
+  app.get("/api/auth/me", async (c) => {
     const token = getCookie(c, COOKIE_NAME);
 
     if (!token) {
-      return respond(c, success(null));
+      // 프론트엔드 api-client가 기대하는 형식으로 반환
+      return c.json({ success: true, data: null }, 200);
     }
 
     const payload = await verifyToken(token);
@@ -40,20 +41,22 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (!payload) {
       // 유효하지 않은 토큰은 삭제
       deleteCookie(c, COOKIE_NAME);
-      return respond(c, success(null));
+      // 프론트엔드 api-client가 기대하는 형식으로 반환
+      return c.json({ success: true, data: null }, 200);
     }
 
-    return respond(c, success(payload));
+    // 프론트엔드 api-client가 기대하는 형식으로 반환
+    return c.json({ success: true, data: payload }, 200);
   });
 
   // 로그아웃
-  app.post("/auth/logout", async (c) => {
+  app.post("/api/auth/logout", async (c) => {
     deleteCookie(c, COOKIE_NAME, { path: "/" });
     return respond(c, success(null));
   });
 
-  // Admin 로그인
-  app.post("/admin/login", async (c) => {
+  // Admin 로그인 (인증 불필요)
+  app.post("/api/admin/login", async (c) => {
     const body = await c.req.json<{ email: string; password: string }>();
 
     const adminEmail = process.env.ADMIN_EMAIL;
@@ -94,8 +97,8 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     );
   });
 
-  // Instructor 로그인
-  app.post("/instructor/login", async (c) => {
+  // Instructor 로그인 (인증 불필요)
+  app.post("/api/instructor/login", async (c) => {
     const body = await c.req.json<{ email: string; pin: string }>();
 
     // PIN 형식 검증 (4자리 숫자)
@@ -155,8 +158,8 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     );
   });
 
-  // Student 인증
-  app.post("/student/auth", async (c) => {
+  // Student 인증 (인증 불필요)
+  app.post("/api/student/auth", async (c) => {
     const body = await c.req.json<{
       courseId: string;
       studentNumber: string;

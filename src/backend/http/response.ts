@@ -50,13 +50,22 @@ export const respond = <TData, TCode extends string, TDetails = unknown>(
   result: HandlerResult<TData, TCode, TDetails>,
 ) => {
   if (result.ok) {
-    return c.json(result.data, result.status);
+    // API 명세에 맞게 { success: true, data: ... } 형식으로 반환
+    return c.json(
+      {
+        success: true,
+        data: result.data,
+      },
+      result.status,
+    );
   }
 
   const errorResult = result as ErrorResult<TCode, TDetails>;
 
+  // API 명세에 맞게 { success: false, error: ... } 형식으로 반환
   return c.json(
     {
+      success: false,
       error: errorResult.error,
     },
     errorResult.status,

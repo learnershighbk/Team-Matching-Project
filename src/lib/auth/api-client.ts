@@ -66,8 +66,37 @@ async function apiRequest<T>(
       credentials: "include", // HttpOnly 쿠키 포함
     });
 
-    return await response.json();
-  } catch {
+    // 응답이 없거나 실패한 경우
+    if (!response.ok) {
+      return {
+        success: false,
+        error: { code: "HTTP_ERROR", message: `HTTP ${response.status}: ${response.statusText}` },
+      };
+    }
+
+    // JSON 파싱 시도
+    try {
+      const data = await response.json();
+      
+      // 응답이 유효한 ApiResponse 형태인지 확인
+      if (data && typeof data === 'object' && ('success' in data || 'data' in data || 'error' in data)) {
+        return data as ApiResponse<T>;
+      }
+      
+      // 유효하지 않은 응답 형태
+      return {
+        success: false,
+        error: { code: "INVALID_RESPONSE", message: "서버 응답 형식이 올바르지 않습니다." },
+      };
+    } catch (jsonError) {
+      // JSON 파싱 실패
+      return {
+        success: false,
+        error: { code: "PARSE_ERROR", message: "서버 응답을 파싱할 수 없습니다." },
+      };
+    }
+  } catch (error) {
+    // 네트워크 오류 또는 기타 예외
     return {
       success: false,
       error: { code: "NETWORK_ERROR", message: "네트워크 오류가 발생했습니다." },

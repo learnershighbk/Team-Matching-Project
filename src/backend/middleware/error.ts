@@ -18,8 +18,10 @@ export const errorBoundary = () =>
 
       logger?.error?.(error);
 
+      // API 명세에 맞게 { success: false, error: ... } 형식으로 반환
       return c.json(
         {
+          success: false,
           error: {
             code: 'INTERNAL_SERVER_ERROR',
             message,
