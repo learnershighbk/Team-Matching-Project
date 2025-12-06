@@ -78,3 +78,4 @@ CREATE TYPE goal_enum AS ENUM (
   'minimum'
 );
 
+

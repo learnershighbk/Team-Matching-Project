@@ -23,3 +23,4 @@ CREATE TABLE IF NOT EXISTS teams (
 -- 인덱스
 CREATE INDEX IF NOT EXISTS idx_teams_course ON teams(course_id);
 
+

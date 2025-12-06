@@ -94,3 +94,4 @@ CREATE TRIGGER students_team_sync
   FOR EACH ROW
   EXECUTE FUNCTION sync_team_member_count();
 
+

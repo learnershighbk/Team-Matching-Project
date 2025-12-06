@@ -30,3 +30,4 @@ CREATE POLICY "Anyone can check course status"
   ON courses FOR SELECT
   USING (true);  -- course_id로 조회, 민감 정보 없음
 
+

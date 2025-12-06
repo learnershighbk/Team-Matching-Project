@@ -16,3 +16,4 @@ $$ LANGUAGE plpgsql;
 -- 또는 API 호출로 주기적 실행
 -- SELECT cron.schedule('auto-lock-courses', '*/5 * * * *', 'SELECT auto_lock_courses();');
 
+
