@@ -2,6 +2,8 @@
  * Matching Feature 타입 정의
  */
 
+import type { ScoreBreakdown } from './scoring';
+
 export type Team = {
   teamId: string;
   courseId: string;
@@ -9,6 +11,8 @@ export type Team = {
   memberCount: number;
   topFactors?: string[];
   members: TeamMember[];
+  scores?: ScoreBreakdown;
+  totalScore?: number;
 };
 
 export type TeamMember = {
