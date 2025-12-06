@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(npm install:*)",
-      "Bash(powershell -Command \"Get-ChildItem -Recurse -Filter ''*.ts'' | ForEach-Object { (Get-Content $_FullName) -replace ''import type \\{ Hono \\}'', ''import { Hono }'' | Set-Content $_FullName }\")"
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -Filter ''*.ts'' | ForEach-Object { (Get-Content $_FullName) -replace ''import type \\{ Hono \\}'', ''import { Hono }'' | Set-Content $_FullName }\")",
+      "Bash(dir /s /b src*.test.ts src*.test.tsx src*.spec.ts src*.spec.tsx)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(npm run test:*)"
     ],
     "deny": [],
     "ask": []
