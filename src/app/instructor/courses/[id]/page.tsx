@@ -324,28 +324,40 @@ export default function CourseDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-2xl font-bold">{matchingPreview.teams?.length || 0}</p>
-                  <p className="text-sm text-muted-foreground">총 팀 수</p>
-                </div>
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-2xl font-bold">
-                    {matchingPreview.statistics?.averageTeamSize?.toFixed(1) || '-'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">평균 팀 크기</p>
-                </div>
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-2xl font-bold">{matchingPreview.statistics?.totalStudents || 0}</p>
-                  <p className="text-sm text-muted-foreground">배정된 학생</p>
-                </div>
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-2xl font-bold">
-                    {(matchingPreview.statistics?.profileCompletionRate * 100)?.toFixed(0) || 0}%
-                  </p>
-                  <p className="text-sm text-muted-foreground">프로필 완료율</p>
-                </div>
-              </div>
+              {(() => {
+                // 통계 계산
+                const teams = matchingPreview.teams || [];
+                const totalTeams = teams.length;
+                const totalAssignedStudents = teams.reduce((sum, team) => sum + (team.memberCount || 0), 0);
+                const averageTeamSize = totalTeams > 0 ? totalAssignedStudents / totalTeams : 0;
+                const totalStudents = students?.length || 0;
+                const profileCompletionRate = totalStudents > 0 ? (totalAssignedStudents / totalStudents) * 100 : 0;
+
+                return (
+                  <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-muted rounded-lg text-center">
+                      <p className="text-2xl font-bold">{totalTeams}</p>
+                      <p className="text-sm text-muted-foreground">총 팀 수</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg text-center">
+                      <p className="text-2xl font-bold">
+                        {averageTeamSize > 0 ? averageTeamSize.toFixed(1) : '-'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">평균 팀 크기</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg text-center">
+                      <p className="text-2xl font-bold">{totalAssignedStudents}</p>
+                      <p className="text-sm text-muted-foreground">배정된 학생</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg text-center">
+                      <p className="text-2xl font-bold">
+                        {!isNaN(profileCompletionRate) ? profileCompletionRate.toFixed(0) : 0}%
+                      </p>
+                      <p className="text-sm text-muted-foreground">프로필 완료율</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <Accordion type="multiple" className="w-full">
                 {matchingPreview.teams?.map((team: Team, index: number) => (
@@ -398,11 +410,11 @@ export default function CourseDetailPage() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>학번</TableHead>
-                              <TableHead>이름</TableHead>
-                              <TableHead>전공</TableHead>
-                              <TableHead>역할</TableHead>
-                              <TableHead>역량</TableHead>
+                              <TableHead>Student ID</TableHead>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Major</TableHead>
+                              <TableHead>Role</TableHead>
+                              <TableHead>Skill</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>

@@ -98,10 +98,11 @@ export default function StudentAuthPage() {
               description: '처음 등록하시는 경우 PIN을 설정해주세요.',
             });
           } else {
-            // 기타 에러 (PIN 오류 등)
+            // "학번 또는 PIN이 올바르지 않습니다" 에러 및 기타 에러 처리
+            // 학번이 존재하지 않거나 PIN이 틀린 경우 모두 이 메시지가 반환됨
             toast({
               title: '로그인 실패',
-              description: errorMessage || 'PIN이 올바르지 않습니다',
+              description: errorMessage || '학번 또는 PIN이 올바르지 않습니다',
               variant: 'destructive',
             });
           }

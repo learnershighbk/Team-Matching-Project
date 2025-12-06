@@ -336,15 +336,147 @@ export async function lockCourse(
   });
 }
 
-// 매칭 실행 (미리보기) - Phase 3에서 구현
+// 매칭 실행 (미리보기)
 export async function runMatching(
   supabase: SupabaseClient,
   courseId: string,
   instructorId: string,
   weightProfile?: string
-): Promise<HandlerResult<unknown, InstructorServiceError, unknown>> {
-  // TODO: Phase 3에서 매칭 알고리즘 구현
-  return failure(501, instructorErrorCodes.fetchError, '매칭 기능은 Phase 3에서 구현 예정입니다');
+): Promise<HandlerResult<{
+  teams: Team[];
+  summary: {
+    teamCount: number;
+    averageScore: number;
+    scoreStdDev: number;
+    minScore: number;
+    maxScore: number;
+  };
+}, InstructorServiceError, unknown>> {
+  // 코스 소유권 및 상태 확인
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('instructor_id, status, team_size, weight_profile')
+    .eq('course_id', courseId)
+    .single();
+
+  if (courseError || !course) {
+    if (courseError?.code === 'PGRST116') {
+      return failure(404, instructorErrorCodes.courseNotFound, '코스를 찾을 수 없습니다');
+    }
+    return failure(500, instructorErrorCodes.fetchError, courseError?.message || '코스 조회 실패');
+  }
+
+  if (course.instructor_id !== instructorId) {
+    return failure(403, instructorErrorCodes.courseNotFound, '코스를 찾을 수 없습니다');
+  }
+
+  if (course.status !== 'LOCKED') {
+    return failure(400, instructorErrorCodes.cannotMatch, 'LOCKED 상태에서만 매칭을 실행할 수 있습니다');
+  }
+
+  // 프로필 완료된 학생 조회
+  const { data: students, error: studentError } = await supabase
+    .from('students')
+    .select(`
+      student_id,
+      student_number,
+      name,
+      email,
+      major,
+      gender,
+      continent,
+      role,
+      skill,
+      times,
+      goal
+    `)
+    .eq('course_id', courseId)
+    .eq('profile_completed', true);
+
+  if (studentError) {
+    return failure(500, instructorErrorCodes.fetchError, studentError.message);
+  }
+
+  if (!students || students.length < 2) {
+    return failure(400, instructorErrorCodes.matchInsufficientStudents, '최소 2명의 프로필 완료 학생이 필요합니다');
+  }
+
+  // 매칭 알고리즘 실행
+  try {
+    const { runMatching: runMatchingAlgorithm } = await import('@/features/matching/algorithm');
+    
+    const finalWeightProfile = weightProfile || course.weight_profile;
+    const result = runMatchingAlgorithm({
+      students: students.map(s => ({
+        studentId: s.student_id,
+        studentNumber: s.student_number,
+        name: s.name || undefined,
+        email: s.email || undefined,
+        major: s.major || undefined,
+        gender: s.gender || undefined,
+        continent: s.continent || undefined,
+        role: s.role || undefined,
+        skill: s.skill || undefined,
+        times: s.times || [],
+        goal: s.goal || undefined,
+      })),
+      teamSize: course.team_size,
+      weightProfile: finalWeightProfile,
+    });
+
+    // 결과를 API 응답 형식으로 변환
+    const teams: Team[] = result.teams.map(team => ({
+      teamId: '', // 미리보기는 DB에 저장하지 않음
+      courseId: courseId,
+      teamNumber: team.teamNumber,
+      memberCount: team.memberCount,
+      scoreTotal: team.totalScore,
+      scoreBreakdown: team.scores ? {
+        time: team.scores.time,
+        skill: team.scores.skill,
+        role: team.scores.role,
+        major: team.scores.major,
+        goal: team.scores.goal,
+        continent: team.scores.continent,
+        gender: team.scores.gender,
+      } : undefined,
+      topFactors: team.topFactors,
+      members: team.members.map(m => ({
+        studentId: m.studentId,
+        studentNumber: m.studentNumber,
+        name: m.name,
+        email: m.email,
+        major: m.major,
+        gender: m.gender,
+        continent: m.continent,
+        role: m.role,
+        skill: m.skill,
+        times: m.times,
+        goal: m.goal,
+      })),
+      createdAt: new Date().toISOString(),
+    }));
+
+    return success({
+      teams,
+      summary: {
+        teamCount: result.summary.teamCount,
+        averageScore: result.summary.averageScore,
+        scoreStdDev: result.summary.scoreStdDev,
+        minScore: result.summary.minScore,
+        maxScore: result.summary.maxScore,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      // MATCH_001 에러 처리
+      if (error.message.includes('MATCH_001')) {
+        return failure(400, instructorErrorCodes.matchInsufficientStudents, error.message.split(':')[1]?.trim() || '최소 2명의 학생이 필요합니다');
+      }
+      return failure(500, instructorErrorCodes.fetchError, error.message);
+    }
+    return failure(500, instructorErrorCodes.fetchError, '매칭 실행 중 오류가 발생했습니다');
+  }
 }
 
 // 매칭 확정 (LOCKED → CONFIRMED) - Phase 3에서 구현

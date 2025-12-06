@@ -64,11 +64,12 @@ export type TeamMember = {
 
 export type MatchingPreview = {
   teams: Team[];
-  statistics: {
-    totalStudents: number;
-    totalTeams: number;
-    averageTeamSize: number;
-    profileCompletionRate: number;
+  summary: {
+    teamCount: number;
+    averageScore: number;
+    scoreStdDev: number;
+    minScore: number;
+    maxScore: number;
   };
 };
 
