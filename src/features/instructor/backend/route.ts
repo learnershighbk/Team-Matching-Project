@@ -4,7 +4,7 @@ import { getSupabase, getLogger, getAuth } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
 import { failure, respond, type ErrorResult } from '@/backend/http/response';
 import { zodErrorToResponse } from '@/lib/errors';
-import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema, type CreateCourseInput } from './schema';
+import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema, ConfirmTeamsSchema, type CreateCourseInput } from './schema';
 import {
   getCourses,
   createCourse,
@@ -213,10 +213,17 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
     }
 
     const courseId = c.req.param('id');
+    const body = await c.req.json();
+    const parsed = ConfirmTeamsSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return respond(c, zodErrorToResponse(parsed.error));
+    }
+
     const supabase = getSupabase(c);
     const logger = getLogger(c);
 
-    const result = await confirmMatching(supabase, courseId, auth.instructorId);
+    const result = await confirmMatching(supabase, courseId, auth.instructorId, parsed.data.teams);
 
     if (!result.ok) {
       const errorResult = result as ErrorResult<InstructorServiceError, unknown>;

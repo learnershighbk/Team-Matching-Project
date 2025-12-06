@@ -24,7 +24,37 @@ export const MatchCourseSchema = z.object({
   weightProfile: z.enum(['balanced', 'skill_heavy', 'skill_role_focused', 'diversity_heavy', 'time_heavy']).optional(),
 });
 
+export const ConfirmTeamsSchema = z.object({
+  teams: z.array(
+    z.object({
+      teamNumber: z.number().int().positive(),
+      memberCount: z.number().int().positive(),
+      scoreTotal: z.number(),
+      scoreBreakdown: z.object({
+        time: z.number(),
+        skill: z.number(),
+        role: z.number(),
+        major: z.number(),
+        goal: z.number(),
+        continent: z.number(),
+        gender: z.number(),
+      }),
+      topFactors: z.array(z.string()),
+      members: z.array(
+        z.object({
+          studentId: z.string().uuid(),
+          studentNumber: z.string(),
+          name: z.string().optional(),
+          email: z.string().optional(),
+          major: z.string().optional(),
+        })
+      ),
+    })
+  ),
+});
+
 export type CreateCourseInput = z.infer<typeof CreateCourseSchema>;
 export type UpdateCourseInput = z.infer<typeof UpdateCourseSchema>;
 export type MatchCourseInput = z.infer<typeof MatchCourseSchema>;
+export type ConfirmTeamsInput = z.infer<typeof ConfirmTeamsSchema>;
 

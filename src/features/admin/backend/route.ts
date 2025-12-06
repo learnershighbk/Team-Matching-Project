@@ -15,9 +15,11 @@ import {
   createInstructor,
   updateInstructor,
   deleteInstructor,
+  getStudents,
   resetStudentPin,
   getCourses,
   updateCourseDeadline,
+  unconfirmCourse,
 } from './service';
 import { adminErrorCodes, type AdminServiceError } from './error';
 import { hashPassword } from '@/lib/auth/hash';
@@ -29,9 +31,11 @@ import { hashPassword } from '@/lib/auth/hash';
  * - POST /api/admin/instructors: 교수자 생성
  * - PUT /api/admin/instructors/:id: 교수자 수정
  * - DELETE /api/admin/instructors/:id: 교수자 삭제
+ * - GET /api/admin/students: 학생 목록 조회
  * - PUT /api/admin/students/:id/reset-pin: 학생 PIN 리셋
  * - GET /api/admin/courses: 코스 목록 조회
  * - PUT /api/admin/courses/:id/deadline: 코스 마감일 수정
+ * - POST /api/admin/courses/:id/unconfirm: 팀 확정 상태 되돌리기
  */
 export const registerAdminRoutes = (app: Hono<AppEnv>) => {
   const admin = new Hono<AppEnv>();
@@ -129,6 +133,15 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     return respond(c, result);
   });
 
+  // 학생 목록 조회
+  admin.get('/students', async (c) => {
+    const courseId = c.req.query('courseId');
+    const supabase = getSupabase(c);
+
+    const result = await getStudents(supabase, { courseId: courseId || undefined });
+    return respond(c, result);
+  });
+
   // 학생 PIN 리셋
   admin.put('/students/:id/reset-pin', async (c) => {
     const studentId = c.req.param('id');
@@ -184,6 +197,22 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     if (!result.ok) {
       const errorResult = result as ErrorResult<AdminServiceError, unknown>;
       logger.error('Failed to update course deadline', errorResult.error.message);
+    }
+
+    return respond(c, result);
+  });
+
+  // 팀 확정 상태 되돌리기
+  admin.post('/courses/:id/unconfirm', async (c) => {
+    const courseId = c.req.param('id');
+    const supabase = getSupabase(c);
+    const logger = getLogger(c);
+
+    const result = await unconfirmCourse(supabase, courseId);
+
+    if (!result.ok) {
+      const errorResult = result as ErrorResult<AdminServiceError, unknown>;
+      logger.error('Failed to unconfirm course', errorResult.error.message);
     }
 
     return respond(c, result);

@@ -110,6 +110,13 @@ export default function ProfilePage() {
     }
   }, [profile]);
 
+  // CONFIRMED 상태일 때 팀 결과 페이지로 리다이렉트
+  useEffect(() => {
+    if (course && course.status === 'CONFIRMED') {
+      router.push(`/course/${uuid}/team`);
+    }
+  }, [course, router, uuid]);
+
   const handleTimeToggle = (time: string) => {
     setFormData((prev) => ({
       ...prev,

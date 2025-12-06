@@ -32,6 +32,7 @@ import {
   useDeleteInstructor,
   useAdminCourses,
   useUpdateCourseDeadline,
+  useUnconfirmCourse,
   useAdminStudents,
   useResetStudentPin,
 } from '@/features/admin/hooks/useAdmin';
@@ -246,6 +247,7 @@ function InstructorManagement() {
 function CourseManagement() {
   const { data: courses, isLoading } = useAdminCourses();
   const { mutate: updateDeadline } = useUpdateCourseDeadline();
+  const { mutate: unconfirmCourse, isPending: isUnconfirming } = useUnconfirmCourse();
   const [filter, setFilter] = useState<string>('all');
 
   const filteredCourses = courses?.filter((course: Course) => {
@@ -265,6 +267,21 @@ function CourseManagement() {
         },
       }
     );
+  };
+
+  const handleUnconfirm = (courseId: string, courseName: string) => {
+    if (!confirm(`"${courseName}"의 팀 확정 상태를 되돌리시겠습니까?\n\n이 작업은 다음을 수행합니다:\n- 모든 팀 삭제\n- 학생들의 팀 배정 초기화\n- 코스 상태를 LOCKED로 변경\n\n이 작업은 되돌릴 수 없습니다.`)) {
+      return;
+    }
+
+    unconfirmCourse(courseId, {
+      onSuccess: () => {
+        toast({ title: '성공', description: '팀 확정 상태가 되돌려졌습니다' });
+      },
+      onError: (error) => {
+        toast({ title: '오류', description: error.message, variant: 'destructive' });
+      },
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -359,35 +376,47 @@ function CourseManagement() {
                     })}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          마감일 변경
+                    <div className="flex gap-2 justify-end">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            마감일 변경
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>마감일 변경</DialogTitle>
+                            <DialogDescription>{course.courseName}</DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <Label htmlFor="deadline">새 마감일</Label>
+                            <Input
+                              id="deadline"
+                              type="datetime-local"
+                              defaultValue={course.deadline.slice(0, 16)}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  handleDeadlineChange(
+                                    course.courseId,
+                                    new Date(e.target.value).toISOString()
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      {course.status === 'CONFIRMED' && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleUnconfirm(course.courseId, course.courseName)}
+                          disabled={isUnconfirming}
+                        >
+                          {isUnconfirming ? '처리 중...' : '확정 되돌리기'}
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>마감일 변경</DialogTitle>
-                          <DialogDescription>{course.courseName}</DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                          <Label htmlFor="deadline">새 마감일</Label>
-                          <Input
-                            id="deadline"
-                            type="datetime-local"
-                            defaultValue={course.deadline.slice(0, 16)}
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                handleDeadlineChange(
-                                  course.courseId,
-                                  new Date(e.target.value).toISOString()
-                                );
-                              }
-                            }}
-                          />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

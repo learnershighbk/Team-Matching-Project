@@ -143,10 +143,14 @@ export async function getTeam(
   studentId: string
 ): Promise<HandlerResult<{
   hasTeam: boolean;
+  teamId?: string;
+  courseId?: string;
   teamNumber?: number;
+  memberCount?: number;
   topFactors?: string[];
   matchDescription?: string;
-  teammates?: Array<{ name?: string; major?: string; email?: string }>;
+  members?: Array<{ studentId: string; studentNumber: string; name?: string; email?: string }>;
+  createdAt?: string;
   courseStatus?: string;
   message?: string;
 }, StudentServiceError, unknown>> {
@@ -162,8 +166,10 @@ export async function getTeam(
         team_id,
         team_number,
         top_factors,
+        created_at,
         students(
           student_id,
+          student_number,
           name,
           major,
           email
@@ -188,18 +194,25 @@ export async function getTeam(
     return success({
       hasTeam: false,
       courseStatus,
-      message: courseStatus === 'LOCKED' ? '매칭 결과를 기다리고 있습니다' : '아직 매칭되지 않았습니다',
+      message: courseStatus === 'CONFIRMED' ? '팀 배정 정보를 찾을 수 없습니다' : courseStatus === 'LOCKED' ? '매칭 결과를 기다리고 있습니다' : '아직 매칭되지 않았습니다',
     });
   }
 
   const team = student.teams as any;
-  const teammates = (team.students || [])
-    .filter((s: any) => s.student_id !== studentId)
-    .map((s: any) => ({
-      name: s.name || undefined,
-      major: s.major || undefined,
-      email: s.email || undefined,
-    }));
+  const allMembers = (team.students || []) as Array<{
+    student_id: string;
+    student_number: string;
+    name?: string;
+    email?: string;
+  }>;
+
+  // 모든 팀원 포함 (본인 포함)
+  const members = allMembers.map((s: any) => ({
+    studentId: s.student_id,
+    studentNumber: s.student_number,
+    name: s.name || undefined,
+    email: s.email || undefined,
+  }));
 
   // 매칭 설명 생성
   const factors = team.top_factors || [];
@@ -217,12 +230,19 @@ export async function getTeam(
     ? `이 팀은 ${factors.map(f => factorDescriptions[f] || f).join(' 및 ')} 측면에서 가장 적합하게 매칭되었습니다.`
     : '이 팀은 최적의 매칭으로 구성되었습니다.';
 
+  // courseId 가져오기
+  const courseId = student.course_id;
+
   return success({
     hasTeam: true,
+    teamId: team.team_id,
+    courseId: courseId,
     teamNumber: team.team_number,
+    memberCount: members.length,
     topFactors: factors,
     matchDescription,
-    teammates,
+    members,
+    createdAt: team.created_at || new Date().toISOString(),
   });
 }
 

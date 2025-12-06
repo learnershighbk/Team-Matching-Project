@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { success, failure, type HandlerResult } from '@/backend/http/response';
 import { adminErrorCodes, type AdminServiceError } from './error';
-import type { Instructor, Course } from '../types';
+import type { Instructor, Course, Student } from '../types';
 
 /**
  * Admin Feature 비즈니스 로직
@@ -142,6 +142,47 @@ export async function deleteInstructor(
   return success({ deleted: true });
 }
 
+// 학생 목록 조회
+export async function getStudents(
+  supabase: SupabaseClient,
+  options: { courseId?: string } = {}
+): Promise<HandlerResult<Student[], AdminServiceError, unknown>> {
+  let query = supabase
+    .from('students')
+    .select(`
+      student_id,
+      course_id,
+      student_number,
+      name,
+      email,
+      profile_completed,
+      created_at
+    `)
+    .order('student_number', { ascending: true });
+
+  if (options.courseId) {
+    query = query.eq('course_id', options.courseId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return failure(500, adminErrorCodes.fetchError, error.message);
+  }
+
+  const students: Student[] = (data || []).map((row: any) => ({
+    studentId: row.student_id,
+    courseId: row.course_id,
+    studentNumber: row.student_number,
+    name: row.name,
+    email: row.email,
+    profileCompleted: row.profile_completed,
+    createdAt: row.created_at,
+  }));
+
+  return success(students);
+}
+
 // 학생 PIN 리셋
 export async function resetStudentPin(
   supabase: SupabaseClient,
@@ -252,6 +293,67 @@ export async function updateCourseDeadline(
   return success({
     courseId: course.course_id,
     deadline: course.deadline,
+  });
+}
+
+// 팀 확정 상태 되돌리기 (CONFIRMED → LOCKED)
+export async function unconfirmCourse(
+  supabase: SupabaseClient,
+  courseId: string
+): Promise<HandlerResult<{ courseId: string; status: string }, AdminServiceError, unknown>> {
+  // 코스 존재 및 상태 확인
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('course_id, status')
+    .eq('course_id', courseId)
+    .single();
+
+  if (courseError || !course) {
+    if (courseError?.code === 'PGRST116') {
+      return failure(404, adminErrorCodes.notFound, '코스를 찾을 수 없습니다');
+    }
+    return failure(500, adminErrorCodes.fetchError, courseError?.message || '코스 조회 실패');
+  }
+
+  if (course.status !== 'CONFIRMED') {
+    return failure(400, adminErrorCodes.fetchError, 'CONFIRMED 상태인 코스만 되돌릴 수 있습니다');
+  }
+
+  // 해당 코스의 모든 학생들의 team_id를 null로 설정
+  const { error: updateStudentsError } = await supabase
+    .from('students')
+    .update({ team_id: null })
+    .eq('course_id', courseId);
+
+  if (updateStudentsError) {
+    return failure(500, adminErrorCodes.fetchError, `학생 팀 정보 초기화 실패: ${updateStudentsError.message}`);
+  }
+
+  // 해당 코스의 모든 팀 삭제
+  const { error: deleteTeamsError } = await supabase
+    .from('teams')
+    .delete()
+    .eq('course_id', courseId);
+
+  if (deleteTeamsError) {
+    return failure(500, adminErrorCodes.fetchError, `팀 삭제 실패: ${deleteTeamsError.message}`);
+  }
+
+  // 코스 상태를 LOCKED로 변경
+  const { data: updatedCourse, error: updateStatusError } = await supabase
+    .from('courses')
+    .update({ status: 'LOCKED' })
+    .eq('course_id', courseId)
+    .select('course_id, status')
+    .single();
+
+  if (updateStatusError) {
+    return failure(500, adminErrorCodes.fetchError, `코스 상태 업데이트 실패: ${updateStatusError.message}`);
+  }
+
+  return success({
+    courseId: updatedCourse.course_id,
+    status: updatedCourse.status,
   });
 }
 

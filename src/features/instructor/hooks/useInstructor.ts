@@ -181,16 +181,44 @@ export function useConfirmTeams() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (courseId: string) => {
-      const { data } = await apiClient.post<ApiResponse<{ teams: Team[] }>>(`/api/instructor/courses/${courseId}/confirm`);
+    mutationFn: async ({ courseId, teams }: { courseId: string; teams: Team[] }) => {
+      const { data } = await apiClient.post<ApiResponse<{ courseId: string; status: string; teamCount: number }>>(
+        `/api/instructor/courses/${courseId}/confirm`,
+        {
+          teams: teams.map((team) => ({
+            teamNumber: team.teamNumber,
+            memberCount: team.memberCount,
+            scoreTotal: team.scoreTotal || 0,
+            scoreBreakdown: team.scoreBreakdown || {
+              time: 0,
+              skill: 0,
+              role: 0,
+              major: 0,
+              goal: 0,
+              continent: 0,
+              gender: 0,
+            },
+            topFactors: team.topFactors || [],
+            members: team.members.map((member) => ({
+              studentId: member.studentId,
+              studentNumber: member.studentNumber,
+              name: member.name,
+              email: member.email,
+              major: member.major,
+            })),
+          })),
+        }
+      );
       if (!data.success) {
         throw new Error(data.error?.message || '팀 확정에 실패했습니다');
       }
       return data.data;
     },
-    onSuccess: (_, courseId) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['instructor', 'courses'] });
-      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', variables.courseId] });
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', variables.courseId, 'teams'] });
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', variables.courseId, 'students'] });
     },
     onError: (error) => {
       console.error('Confirm teams error:', extractApiErrorMessage(error));

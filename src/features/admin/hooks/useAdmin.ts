@@ -89,11 +89,11 @@ export function useAdminCourses() {
   return useQuery({
     queryKey: ['admin', 'courses'],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<Course[]>>('/api/admin/courses');
+      const { data } = await apiClient.get<ApiResponse<{ courses: Course[]; pagination: { page: number; limit: number; total: number } }>>('/api/admin/courses');
       if (!data.success) {
         throw new Error(data.error?.message || '코스 목록을 불러오는데 실패했습니다');
       }
-      return data.data || [];
+      return data.data?.courses || [];
     },
   });
 }
@@ -114,6 +114,28 @@ export function useUpdateCourseDeadline() {
     },
     onError: (error) => {
       console.error('Update deadline error:', extractApiErrorMessage(error));
+    },
+  });
+}
+
+export function useUnconfirmCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      const { data } = await apiClient.post<ApiResponse<{ courseId: string; status: string }>>(
+        `/api/admin/courses/${courseId}/unconfirm`
+      );
+      if (!data.success) {
+        throw new Error(data.error?.message || '팀 확정 상태 되돌리기에 실패했습니다');
+      }
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'courses'] });
+    },
+    onError: (error) => {
+      console.error('Unconfirm course error:', extractApiErrorMessage(error));
     },
   });
 }

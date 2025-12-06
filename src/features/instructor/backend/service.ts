@@ -483,7 +483,29 @@ export async function runMatching(
 export async function confirmMatching(
   supabase: SupabaseClient,
   courseId: string,
-  instructorId: string
+  instructorId: string,
+  teams: Array<{
+    teamNumber: number;
+    memberCount: number;
+    scoreTotal: number;
+    scoreBreakdown: {
+      time: number;
+      skill: number;
+      role: number;
+      major: number;
+      goal: number;
+      continent: number;
+      gender: number;
+    };
+    topFactors: string[];
+    members: Array<{
+      studentId: string;
+      studentNumber: string;
+      name?: string;
+      email?: string;
+      major?: string;
+    }>;
+  }>
 ): Promise<HandlerResult<{ courseId: string; status: string; teamCount: number }, InstructorServiceError, unknown>> {
   // 코스 소유권 및 상태 확인
   const { data: course, error: courseError } = await supabase
@@ -504,31 +526,76 @@ export async function confirmMatching(
     return failure(400, instructorErrorCodes.cannotMatch, 'LOCKED 상태에서만 확정할 수 있습니다');
   }
 
-  // 팀 존재 확인
-  const { count: teamCount } = await supabase
-    .from('teams')
-    .select('*', { count: 'exact', head: true })
-    .eq('course_id', courseId);
-
-  if (!teamCount || teamCount === 0) {
+  // 팀 데이터 검증
+  if (!teams || teams.length === 0) {
     return failure(400, instructorErrorCodes.matchNotRun, '먼저 매칭을 실행해주세요');
   }
 
-  const { data: updatedCourse, error } = await supabase
+  // 기존 팀 삭제 (이전 매칭 결과가 있을 경우)
+  const { error: deleteError } = await supabase
+    .from('teams')
+    .delete()
+    .eq('course_id', courseId);
+
+  if (deleteError) {
+    return failure(500, instructorErrorCodes.fetchError, `기존 팀 삭제 실패: ${deleteError.message}`);
+  }
+
+  // 트랜잭션으로 팀 생성 및 학생 업데이트
+  for (const team of teams) {
+    // 팀 생성
+    const { data: newTeam, error: teamError } = await supabase
+      .from('teams')
+      .insert({
+        course_id: courseId,
+        team_number: team.teamNumber,
+        member_count: team.memberCount,
+        score_total: team.scoreTotal,
+        score_time: team.scoreBreakdown.time,
+        score_skill: team.scoreBreakdown.skill,
+        score_role: team.scoreBreakdown.role,
+        score_major: team.scoreBreakdown.major,
+        score_goal: team.scoreBreakdown.goal,
+        score_continent: team.scoreBreakdown.continent,
+        score_gender: team.scoreBreakdown.gender,
+        top_factors: team.topFactors,
+      })
+      .select()
+      .single();
+
+    if (teamError) {
+      return failure(500, instructorErrorCodes.fetchError, `팀 생성 실패: ${teamError.message}`);
+    }
+
+    // 학생들의 team_id 업데이트
+    const memberIds = team.members.map((m) => m.studentId);
+
+    const { error: updateError } = await supabase
+      .from('students')
+      .update({ team_id: newTeam.team_id })
+      .in('student_id', memberIds);
+
+    if (updateError) {
+      return failure(500, instructorErrorCodes.fetchError, `학생 팀 업데이트 실패: ${updateError.message}`);
+    }
+  }
+
+  // 코스 상태 업데이트
+  const { data: updatedCourse, error: updateStatusError } = await supabase
     .from('courses')
     .update({ status: 'CONFIRMED' })
     .eq('course_id', courseId)
     .select('course_id, status')
     .single();
 
-  if (error) {
-    return failure(500, instructorErrorCodes.fetchError, error.message);
+  if (updateStatusError) {
+    return failure(500, instructorErrorCodes.fetchError, `코스 상태 업데이트 실패: ${updateStatusError.message}`);
   }
 
   return success({
     courseId: updatedCourse.course_id,
     status: updatedCourse.status,
-    teamCount: teamCount || 0,
+    teamCount: teams.length,
   });
 }
 

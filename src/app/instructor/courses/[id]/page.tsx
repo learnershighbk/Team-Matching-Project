@@ -110,16 +110,24 @@ export default function CourseDetailPage() {
   };
 
   const handleConfirmTeams = () => {
-    confirmTeams(courseId, {
-      onSuccess: () => {
-        setShowMatchingPreview(false);
-        setShowConfirmDialog(false);
-        toast({ title: '성공', description: '팀이 확정되었습니다' });
-      },
-      onError: (error) => {
-        toast({ title: '오류', description: error.message, variant: 'destructive' });
-      },
-    });
+    if (!matchingPreview || !matchingPreview.teams || matchingPreview.teams.length === 0) {
+      toast({ title: '오류', description: '매칭 결과가 없습니다. 먼저 매칭을 실행해주세요.', variant: 'destructive' });
+      return;
+    }
+
+    confirmTeams(
+      { courseId, teams: matchingPreview.teams },
+      {
+        onSuccess: () => {
+          setShowMatchingPreview(false);
+          setShowConfirmDialog(false);
+          toast({ title: '성공', description: '팀이 확정되었습니다' });
+        },
+        onError: (error) => {
+          toast({ title: '오류', description: error.message, variant: 'destructive' });
+        },
+      }
+    );
   };
 
   if (courseLoading) {
