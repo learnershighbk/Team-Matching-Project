@@ -20,9 +20,9 @@ export type StudentStatus = {
   studentNumber: string;
   name?: string;
   email?: string;
+  major?: string;
   profileCompleted: boolean;
-  teamId?: string;
-  createdAt: string;
+  teamNumber?: number | null;
 };
 
 export type Team = {
@@ -30,6 +30,16 @@ export type Team = {
   courseId: string;
   teamNumber: number;
   memberCount: number;
+  scoreTotal?: number;
+  scoreBreakdown?: {
+    time: number;
+    skill: number;
+    role: number;
+    major: number;
+    goal: number;
+    continent: number;
+    gender: number;
+  };
   topFactors?: string[];
   members: TeamMember[];
   createdAt: string;
@@ -40,6 +50,13 @@ export type TeamMember = {
   studentNumber: string;
   name?: string;
   email?: string;
+  major?: string;
+  gender?: string;
+  continent?: string;
+  role?: string;
+  skill?: string;
+  times?: string[];
+  goal?: string;
 };
 
 export type MatchingPreview = {

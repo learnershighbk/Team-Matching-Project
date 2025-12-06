@@ -6,8 +6,9 @@ export type CourseStatus = {
   courseId: string;
   courseName: string;
   courseCode: string;
-  status: 'OPEN' | 'CLOSED' | 'MATCHED' | 'ARCHIVED';
+  status: string;
   deadline: string;
+  isDeadlinePassed: boolean;
   teamSize: number;
   studentCount?: number;
   profileCompletionRate?: number;
