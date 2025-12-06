@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { useCourseStatus } from '@/features/course/hooks/useCourse';
 import { useStudentAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { extractApiErrorCode } from '@/lib/remote/api-client';
+import { AUTH_ERROR_CODES } from '@/lib/errors/codes';
 
 type Step = 'studentNumber' | 'pin' | 'newPin';
 
@@ -72,14 +74,34 @@ export default function StudentAuthPage() {
           }
         },
         onError: (error) => {
-          if (error.message?.includes('학번') || error.message?.includes('등록')) {
+          const errorMessage = error.message || '';
+          const errorCode = extractApiErrorCode(error);
+          
+          // "이미 등록된 학번" 에러는 명확하게 toast로 표시
+          // AUTH_003 코드이고 메시지에 "이미 등록된 학번"이 포함된 경우
+          if (errorCode === AUTH_ERROR_CODES.AUTH_FAILED && errorMessage.includes('이미 등록된 학번')) {
+            toast({
+              title: '등록 오류',
+              description: errorMessage,
+              variant: 'destructive',
+            });
+            // PIN 입력 단계로 돌아가기
+            setStep('pin');
+            setPin('');
+          } else if (errorMessage.includes('학번을 찾을 수 없습니다') || errorMessage.includes('존재하지 않는')) {
+            // 학번이 없는 경우 새 유저 플로우로 전환
             setIsNewUser(true);
             setStep('newPin');
             setPin('');
+            toast({
+              title: '새 사용자',
+              description: '처음 등록하시는 경우 PIN을 설정해주세요.',
+            });
           } else {
+            // 기타 에러 (PIN 오류 등)
             toast({
               title: '로그인 실패',
-              description: error.message || 'PIN이 올바르지 않습니다',
+              description: errorMessage || 'PIN이 올바르지 않습니다',
               variant: 'destructive',
             });
           }
@@ -106,11 +128,14 @@ export default function StudentAuthPage() {
           router.push(`/course/${uuid}/profile`);
         },
         onError: (error) => {
+          const errorMessage = error.message || '등록에 실패했습니다';
           toast({
             title: '등록 실패',
-            description: error.message || '등록에 실패했습니다',
+            description: errorMessage,
             variant: 'destructive',
           });
+          // 에러 발생 시 PIN 입력 단계로 돌아가기
+          setStep('newPin');
         },
       }
     );

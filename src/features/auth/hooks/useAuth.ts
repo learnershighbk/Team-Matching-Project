@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { apiClient, extractApiErrorMessage } from '@/lib/remote/api-client';
+import { apiClient, extractApiErrorMessage, isAxiosError } from '@/lib/remote/api-client';
 
 // API Response Types
 type ApiResponse<T> = {
@@ -122,7 +122,9 @@ export function useStudentAuth() {
         
         // 에러 응답 확인
         if (data && 'error' in data) {
-          throw new Error(data.error.message || '인증에 실패했습니다');
+          const apiError = new Error(data.error.message || '인증에 실패했습니다');
+          (apiError as any).code = data.error.code;
+          throw apiError;
         }
         
         // 성공 응답
@@ -133,6 +135,16 @@ export function useStudentAuth() {
           courseStatus: string;
         };
       } catch (error) {
+        // axios 에러인 경우 원본 에러 정보 유지
+        if (isAxiosError(error)) {
+          const payload = error.response?.data as { error?: { code?: string; message?: string } } | undefined;
+          if (payload?.error) {
+            const apiError = new Error(payload.error.message || extractApiErrorMessage(error, '인증에 실패했습니다'));
+            (apiError as any).code = payload.error.code;
+            throw apiError;
+          }
+        }
+        
         const message = extractApiErrorMessage(error, '인증에 실패했습니다');
         throw new Error(message);
       }
@@ -141,7 +153,10 @@ export function useStudentAuth() {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     },
     onError: (error) => {
-      console.error('Student auth error:', extractApiErrorMessage(error));
+      // 기본 onError는 콘솔에만 로그하고, 실제 에러 처리는 호출하는 컴포넌트에서 처리
+      // (mutate 호출 시 onError를 제공하면 그쪽에서 처리됨)
+      const errorMessage = extractApiErrorMessage(error);
+      console.error('Student auth error:', errorMessage);
     },
   });
 }

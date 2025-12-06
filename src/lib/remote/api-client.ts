@@ -10,6 +10,7 @@ const apiClient = axios.create({
 
 type ErrorPayload = {
   error?: {
+    code?: string;
     message?: string;
   };
   message?: string;
@@ -36,6 +37,21 @@ export const extractApiErrorMessage = (
   }
 
   return fallbackMessage;
+};
+
+export const extractApiErrorCode = (error: unknown): string | undefined => {
+  // Error 객체에 code 속성이 있는 경우 (useAuth 등에서 설정한 경우)
+  if (error instanceof Error && (error as any).code) {
+    return (error as any).code;
+  }
+  
+  // axios 에러인 경우
+  if (isAxiosError(error)) {
+    const payload = error.response?.data as ErrorPayload | undefined;
+    return payload?.error?.code;
+  }
+  
+  return undefined;
 };
 
 export { apiClient, isAxiosError };

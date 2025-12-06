@@ -166,6 +166,20 @@ export default function ProfilePage() {
       {
         onSuccess: () => {
           toast({ title: '저장 완료', description: '프로필이 저장되었습니다' });
+          
+          // 코스 상태에 따라 적절한 페이지로 리다이렉트
+          if (course) {
+            if (course.status === 'CONFIRMED') {
+              // 팀 확정된 경우 팀 결과 페이지로
+              router.push(`/course/${uuid}/team`);
+            } else if (course.status === 'LOCKED') {
+              // 마감된 경우 대기 화면으로
+              router.push(`/course/${uuid}/waiting`);
+            } else {
+              // OPEN 상태인 경우 메인 코스 페이지로
+              router.push(`/course/${uuid}`);
+            }
+          }
         },
         onError: (error) => {
           toast({ title: '오류', description: error.message, variant: 'destructive' });
