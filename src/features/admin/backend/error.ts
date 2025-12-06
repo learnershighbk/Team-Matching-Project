@@ -1,12 +1,9 @@
+import { ADMIN_ERROR_CODES, type AdminErrorCode } from '@/lib/errors/codes';
+
 export const adminErrorCodes = {
-  duplicateEmail: 'ADMIN_001',
-  cannotDelete: 'ADMIN_002',
-  notFound: 'ADMIN_NOT_FOUND',
-  fetchError: 'ADMIN_FETCH_ERROR',
-  validationError: 'ADMIN_VALIDATION_ERROR',
+  duplicateEmail: ADMIN_ERROR_CODES.DUPLICATE_EMAIL,
+  cannotDelete: ADMIN_ERROR_CODES.CANNOT_DELETE,
 } as const;
 
-type AdminErrorValue = (typeof adminErrorCodes)[keyof typeof adminErrorCodes];
-
-export type AdminServiceError = AdminErrorValue;
+export type AdminServiceError = AdminErrorCode;
 

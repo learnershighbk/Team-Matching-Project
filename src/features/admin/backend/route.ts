@@ -3,6 +3,7 @@ import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase, getLogger } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
 import { failure, respond, type ErrorResult } from '@/backend/http/response';
+import { zodErrorToResponse } from '@/lib/errors';
 import {
   CreateInstructorSchema,
   UpdateInstructorSchema,
@@ -51,10 +52,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     const parsed = CreateInstructorSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, 'ADMIN_VALIDATION_ERROR', '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);
@@ -86,10 +84,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     const parsed = UpdateInstructorSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, 'ADMIN_VALIDATION_ERROR', '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);
@@ -139,10 +134,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     const parsed = ResetStudentPinSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, 'ADMIN_VALIDATION_ERROR', '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);
@@ -181,10 +173,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     const parsed = UpdateCourseDeadlineSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, 'ADMIN_VALIDATION_ERROR', '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);

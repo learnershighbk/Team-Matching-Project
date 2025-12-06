@@ -13,6 +13,8 @@ import {
   type StudentPayload,
 } from "./jwt";
 import { verifyPassword } from "@/lib/auth/hash";
+import { createErrorResponse } from "@/lib/errors";
+import { AUTH_ERROR_CODES, COURSE_ERROR_CODES } from "@/lib/errors/codes";
 
 /**
  * TeamMatch 인증 라우트
@@ -60,14 +62,14 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (!adminEmail || !adminPassword) {
       return respond(
         c,
-        failure(500, "AUTH_CONFIG_ERROR", "Admin 계정이 설정되지 않았습니다.")
+        createErrorResponse(AUTH_ERROR_CODES.CONFIG_ERROR, "Admin 계정이 설정되지 않았습니다.")
       );
     }
 
     if (body.email !== adminEmail || body.password !== adminPassword) {
       return respond(
         c,
-        failure(401, "AUTH_003", "인증에 실패했습니다.")
+        createErrorResponse(AUTH_ERROR_CODES.AUTH_FAILED)
       );
     }
 
@@ -100,7 +102,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (!/^\d{4}$/.test(body.pin)) {
       return respond(
         c,
-        failure(400, "AUTH_002", "PIN은 4자리 숫자여야 합니다")
+        createErrorResponse(AUTH_ERROR_CODES.INVALID_PIN)
       );
     }
 
@@ -116,7 +118,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (error || !instructor) {
       return respond(
         c,
-        failure(401, "AUTH_003", "이메일 또는 PIN이 올바르지 않습니다")
+        createErrorResponse(AUTH_ERROR_CODES.AUTH_FAILED, "이메일 또는 PIN이 올바르지 않습니다")
       );
     }
 
@@ -125,7 +127,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (!isValid) {
       return respond(
         c,
-        failure(401, "AUTH_003", "이메일 또는 PIN이 올바르지 않습니다")
+        createErrorResponse(AUTH_ERROR_CODES.AUTH_FAILED, "이메일 또는 PIN이 올바르지 않습니다")
       );
     }
 
@@ -166,7 +168,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (!/^\d{9}$/.test(body.studentNumber)) {
       return respond(
         c,
-        failure(400, "AUTH_001", "학번은 9자리 숫자여야 합니다")
+        createErrorResponse(AUTH_ERROR_CODES.INVALID_STUDENT_NUMBER)
       );
     }
 
@@ -174,7 +176,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (!/^\d{4}$/.test(body.pin)) {
       return respond(
         c,
-        failure(400, "AUTH_002", "PIN은 4자리 숫자여야 합니다")
+        createErrorResponse(AUTH_ERROR_CODES.INVALID_PIN)
       );
     }
 
@@ -190,7 +192,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     if (courseError || !course) {
       return respond(
         c,
-        failure(404, "COURSE_001", "코스를 찾을 수 없습니다")
+        createErrorResponse(COURSE_ERROR_CODES.NOT_FOUND)
       );
     }
 
@@ -214,12 +216,12 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
         if (insertError?.code === "23505") {
           return respond(
             c,
-            failure(400, "AUTH_003", "이미 등록된 학번입니다")
+            createErrorResponse(AUTH_ERROR_CODES.AUTH_FAILED, "이미 등록된 학번입니다")
           );
         }
         return respond(
           c,
-          failure(500, "AUTH_004", "학생 등록에 실패했습니다")
+          createErrorResponse(AUTH_ERROR_CODES.REGISTRATION_FAILED)
         );
       }
 
@@ -259,7 +261,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
       if (studentError || !student) {
         return respond(
           c,
-          failure(401, "AUTH_003", "학번 또는 PIN이 올바르지 않습니다")
+          createErrorResponse(AUTH_ERROR_CODES.AUTH_FAILED, "학번 또는 PIN이 올바르지 않습니다")
         );
       }
 
@@ -268,7 +270,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
       if (!isValid) {
         return respond(
           c,
-          failure(401, "AUTH_003", "학번 또는 PIN이 올바르지 않습니다")
+          createErrorResponse(AUTH_ERROR_CODES.AUTH_FAILED, "학번 또는 PIN이 올바르지 않습니다")
         );
       }
 

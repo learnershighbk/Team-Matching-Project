@@ -3,6 +3,7 @@ import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase, getLogger, getAuth } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
 import { failure, respond, type ErrorResult } from '@/backend/http/response';
+import { zodErrorToResponse } from '@/lib/errors';
 import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema } from './schema';
 import {
   getCourses,
@@ -62,10 +63,7 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
     const parsed = CreateCourseSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, instructorErrorCodes.validationError, '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);
@@ -109,10 +107,7 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
     const parsed = UpdateCourseSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, instructorErrorCodes.validationError, '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);
@@ -202,10 +197,7 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
     const parsed = MatchCourseSchema.safeParse(body);
 
     if (!parsed.success) {
-      return respond(
-        c,
-        failure(400, instructorErrorCodes.validationError, '입력값이 올바르지 않습니다', parsed.error.format())
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);

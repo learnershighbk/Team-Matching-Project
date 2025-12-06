@@ -2,6 +2,7 @@ import type { Hono } from 'hono';
 import type { AppEnv } from '@/backend/hono/context';
 import { getSupabase } from '@/backend/hono/context';
 import { respond } from '@/backend/http/response';
+import { zodErrorToResponse } from '@/lib/errors';
 import { CourseIdParamsSchema } from './schema';
 import { getCourseStatus } from './service';
 
@@ -17,10 +18,7 @@ export const registerCourseRoutes = (app: Hono<AppEnv>) => {
     const parsed = CourseIdParamsSchema.safeParse({ id: courseId });
 
     if (!parsed.success) {
-      return respond(
-        c,
-        { ok: false, status: 400, error: { code: 'COURSE_VALIDATION_ERROR', message: '올바른 UUID 형식이 아닙니다' } }
-      );
+      return respond(c, zodErrorToResponse(parsed.error));
     }
 
     const supabase = getSupabase(c);

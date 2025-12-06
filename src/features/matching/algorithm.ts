@@ -9,6 +9,7 @@ import { createTeamSlots, type TeamSlot } from './slots';
 import { calculateScores, type ScoreBreakdown } from './scoring';
 import { optimizeTeams } from './optimizer';
 import { getWeightProfile } from './weights';
+import { normalizeTopFactors } from './utils';
 
 export type MatchingInput = {
   students: Array<{
@@ -142,7 +143,7 @@ function finalizeResult(
       ...team,
       scores,
       totalScore,
-      topFactors: [topFactors[0], topFactors[1]],
+      topFactors: normalizeTopFactors([topFactors[0], topFactors[1]]),
     };
   });
 

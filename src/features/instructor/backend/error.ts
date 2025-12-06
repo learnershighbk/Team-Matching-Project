@@ -1,18 +1,20 @@
+import { 
+  COURSE_ERROR_CODES, 
+  MATCH_ERROR_CODES,
+  type CourseErrorCode,
+  type MatchErrorCode 
+} from '@/lib/errors/codes';
+
 export const instructorErrorCodes = {
-  courseNotFound: 'COURSE_001',
-  deadlinePassed: 'COURSE_002',
-  cannotModify: 'COURSE_003',
-  alreadyLocked: 'COURSE_004',
-  cannotMatch: 'COURSE_005',
-  matchInsufficientStudents: 'MATCH_001',
-  alreadyConfirmed: 'MATCH_002',
-  matchNotRun: 'MATCH_003',
-  notFound: 'INSTRUCTOR_NOT_FOUND',
-  fetchError: 'INSTRUCTOR_FETCH_ERROR',
-  validationError: 'INSTRUCTOR_VALIDATION_ERROR',
+  courseNotFound: COURSE_ERROR_CODES.NOT_FOUND,
+  deadlinePassed: COURSE_ERROR_CODES.DEADLINE_PASSED,
+  cannotModify: COURSE_ERROR_CODES.CANNOT_MODIFY,
+  alreadyLocked: COURSE_ERROR_CODES.ALREADY_LOCKED,
+  cannotMatch: COURSE_ERROR_CODES.CANNOT_MATCH,
+  matchInsufficientStudents: MATCH_ERROR_CODES.INSUFFICIENT_STUDENTS,
+  alreadyConfirmed: MATCH_ERROR_CODES.ALREADY_CONFIRMED,
+  matchNotRun: MATCH_ERROR_CODES.NOT_RUN,
 } as const;
 
-type InstructorErrorValue = (typeof instructorErrorCodes)[keyof typeof instructorErrorCodes];
-
-export type InstructorServiceError = InstructorErrorValue;
+export type InstructorServiceError = CourseErrorCode | MatchErrorCode;
 
