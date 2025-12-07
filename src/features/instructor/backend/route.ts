@@ -57,7 +57,8 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
     if (result.ok) {
       logger.info(`[GET /api/instructor/courses] Success: ${result.data.length} courses found`);
     } else {
-      logger.error(`[GET /api/instructor/courses] Error: ${result.error.message}`);
+      const errorResult = result as ErrorResult<InstructorServiceError, unknown>;
+      logger.error(`[GET /api/instructor/courses] Error: ${errorResult.error.message}`);
     }
     
     return respond(c, result);
