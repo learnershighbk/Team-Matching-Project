@@ -49,7 +49,7 @@ export default function InstructorDashboardPage() {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        router.push('/instructor');
+        router.push('/login');
       },
     });
   };
