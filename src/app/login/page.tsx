@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -7,6 +8,7 @@ import {
   BookOpen,
   GraduationCap,
   Shield,
+  Globe,
 } from "lucide-react";
 
 const COLORS = {
@@ -24,25 +26,74 @@ const COLORS = {
   },
 };
 
+type Language = "ko" | "en";
+
+const translations = {
+  ko: {
+    title: "역할별 서비스",
+    subtitle: "사용자 역할에 따라 맞춤화된 기능을 제공합니다",
+    roles: {
+      admin: {
+        subtitle: "시스템 관리자",
+        description: "교수자 계정 관리, 코스 현황 모니터링, 학생 PIN 리셋 등 시스템 전반을 관리합니다.",
+        buttonText: "Admin 로그인",
+      },
+      instructor: {
+        subtitle: "교수자",
+        description: "코스 생성, 학생 현황 확인, 매칭 실행 및 팀 확정 등 코스를 운영합니다.",
+        buttonText: "Instructor 로그인",
+      },
+      student: {
+        subtitle: "학생",
+        description: "교수자가 생성한 코스 링크를 통해 접속하여 프로필을 입력하고 팀 매칭 결과를 확인 합니다.",
+        buttonText: "코스 링크로 접속",
+      },
+    },
+  },
+  en: {
+    title: "Services by Role",
+    subtitle: "Customized features based on user roles",
+    roles: {
+      admin: {
+        subtitle: "System Administrator",
+        description: "Manages the entire system including instructor account management, course status monitoring, and student PIN resets.",
+        buttonText: "Admin Login",
+      },
+      instructor: {
+        subtitle: "Instructor",
+        description: "Operates courses including course creation, student status checking, matching execution, and team confirmation.",
+        buttonText: "Instructor Login",
+      },
+      student: {
+        subtitle: "Student",
+        description: "Access via the course link created by your instructor to input your profile and check team matching results.",
+        buttonText: "Access via Course Link",
+      },
+    },
+  },
+};
+
 export default function LoginPage() {
+  const [language, setLanguage] = useState<Language>("ko");
   const colors = COLORS.light;
+  const t = translations[language];
 
   const roles = [
     {
       icon: Shield,
       title: "Admin",
-      subtitle: "시스템 관리자",
-      description: "교수자 계정 관리, 코스 현황 모니터링, 학생 PIN 리셋 등 시스템 전반을 관리합니다.",
-      buttonText: "Admin 로그인",
+      subtitle: t.roles.admin.subtitle,
+      description: t.roles.admin.description,
+      buttonText: t.roles.admin.buttonText,
       color: "#E53935",
       href: "/admin",
     },
     {
       icon: BookOpen,
       title: "Instructor",
-      subtitle: "교수자",
-      description: "코스 생성, 학생 현황 확인, 매칭 실행 및 팀 확정 등 코스를 운영합니다.",
-      buttonText: "Instructor 로그인",
+      subtitle: t.roles.instructor.subtitle,
+      description: t.roles.instructor.description,
+      buttonText: t.roles.instructor.buttonText,
       color: "#1E88E5",
       primary: true,
       href: "/instructor",
@@ -50,9 +101,9 @@ export default function LoginPage() {
     {
       icon: GraduationCap,
       title: "Student",
-      subtitle: "학생",
-      description: "코스 링크를 통해 접속하여 프로필을 입력하고 팀 매칭 결과를 확인합니다.",
-      buttonText: "코스 링크로 접속",
+      subtitle: t.roles.student.subtitle,
+      description: t.roles.student.description,
+      buttonText: t.roles.student.buttonText,
       color: "#43A047",
       href: "/login",
     },
@@ -67,6 +118,19 @@ export default function LoginPage() {
         color: colors.heading,
       }}
     >
+      {/* Language Toggle */}
+      <div className="max-w-6xl mx-auto px-4 pt-8 flex justify-end">
+        <button
+          onClick={() => setLanguage(language === "ko" ? "en" : "ko")}
+          className="flex items-center gap-2 text-base font-medium px-5 py-2.5 rounded-lg transition-colors hover:opacity-70"
+          style={{ color: colors.description }}
+          title={language === "ko" ? "Switch to English" : "한국어로 전환"}
+        >
+          <Globe className="w-5 h-5" />
+          {language === "ko" ? "EN" : "한"}
+        </button>
+      </div>
+
       {/* Role Cards Section */}
       <section className="max-w-6xl mx-auto px-4 py-20">
         <motion.div
@@ -79,10 +143,10 @@ export default function LoginPage() {
             className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
             style={{ color: colors.heading }}
           >
-            역할별 서비스
+            {t.title}
           </h2>
           <p className="text-lg md:text-xl" style={{ color: colors.description }}>
-            사용자 역할에 따라 맞춤화된 기능을 제공합니다
+            {t.subtitle}
           </p>
         </motion.div>
 

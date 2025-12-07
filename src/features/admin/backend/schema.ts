@@ -16,9 +16,7 @@ export const UpdateInstructorSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요').max(100, '이름은 100자 이하여야 합니다').optional(),
 });
 
-export const ResetStudentPinSchema = z.object({
-  pin: z.string().regex(/^\d{4}$/, 'PIN은 4자리 숫자여야 합니다'),
-});
+export const ResetStudentPinSchema = z.object({});
 
 export const UpdateCourseDeadlineSchema = z.object({
   deadline: z.string().datetime('올바른 날짜 형식이 아닙니다'),

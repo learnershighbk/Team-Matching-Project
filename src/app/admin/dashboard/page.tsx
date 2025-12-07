@@ -222,7 +222,7 @@ function InstructorManagement() {
                   <TableCell>{instructor.email}</TableCell>
                   <TableCell>{instructor.courseCount || 0}</TableCell>
                   <TableCell>
-                    {new Date(instructor.createdAt).toLocaleDateString('ko-KR')}
+                    {new Date(instructor.createdAt).toLocaleDateString('en-US')}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -368,7 +368,7 @@ function CourseManagement() {
                   <TableCell>{course.instructorName || '-'}</TableCell>
                   <TableCell>{getStatusBadge(course.status)}</TableCell>
                   <TableCell>
-                    {new Date(course.deadline).toLocaleDateString('ko-KR', {
+                    {new Date(course.deadline).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
@@ -435,7 +435,6 @@ function StudentManagement() {
   const { mutate: resetPin, isPending: isResetting } = useResetStudentPin();
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [newPin, setNewPin] = useState('');
 
   const filteredStudents = students?.filter(
     (student: Student) =>
@@ -444,18 +443,23 @@ function StudentManagement() {
   );
 
   const handleResetPin = () => {
-    if (!selectedStudent || newPin.length !== 4) {
-      toast({ title: '오류', description: 'PIN은 4자리 숫자여야 합니다', variant: 'destructive' });
+    if (!selectedStudent) {
+      toast({ title: '오류', description: '학생을 선택해주세요', variant: 'destructive' });
       return;
     }
 
+    // 학번 마지막 4자리를 PIN으로 사용
+    const lastFourDigits = selectedStudent.studentNumber.slice(-4);
+
     resetPin(
-      { id: selectedStudent.studentId, pin: newPin },
+      { id: selectedStudent.studentId },
       {
         onSuccess: () => {
-          toast({ title: '성공', description: 'PIN이 리셋되었습니다' });
+          toast({
+            title: '성공',
+            description: `PIN이 학번 마지막 4자리(${lastFourDigits})로 리셋되었습니다`,
+          });
           setSelectedStudent(null);
-          setNewPin('');
         },
         onError: (error) => {
           toast({ title: '오류', description: error.message, variant: 'destructive' });
@@ -513,7 +517,7 @@ function StudentManagement() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {new Date(student.createdAt).toLocaleDateString('ko-KR')}
+                    {new Date(student.createdAt).toLocaleDateString('en-US')}
                   </TableCell>
                   <TableCell className="text-right">
                     <Dialog>
@@ -530,29 +534,29 @@ function StudentManagement() {
                         <DialogHeader>
                           <DialogTitle>PIN 리셋</DialogTitle>
                           <DialogDescription>
-                            학번 {selectedStudent?.studentNumber}의 새 PIN을 입력하세요
+                            학번 <span className="font-mono font-semibold">{selectedStudent?.studentNumber}</span>의 PIN을
+                            학번 마지막 4자리로 리셋합니다
                           </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
-                          <Label htmlFor="newPin">새 PIN (4자리)</Label>
-                          <Input
-                            id="newPin"
-                            type="text"
-                            maxLength={4}
-                            value={newPin}
-                            onChange={(e) =>
-                              setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))
-                            }
-                            placeholder="0000"
-                            className="text-center tracking-widest"
-                          />
+                          <div className="space-y-2">
+                            <Label>새 PIN</Label>
+                            <div className="p-4 bg-muted rounded-lg text-center">
+                              <div className="text-sm text-muted-foreground mb-1">학번 마지막 4자리</div>
+                              <div className="text-2xl font-mono font-bold tracking-widest">
+                                {selectedStudent?.studentNumber.slice(-4) || '----'}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              PIN은 학번의 마지막 4자리 숫자로 자동 설정됩니다.
+                            </p>
+                          </div>
                         </div>
                         <DialogFooter>
                           <Button
                             variant="outline"
                             onClick={() => {
                               setSelectedStudent(null);
-                              setNewPin('');
                             }}
                           >
                             취소

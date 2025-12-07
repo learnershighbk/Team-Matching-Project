@@ -330,7 +330,7 @@ function CourseCard({
           <p>팀 크기: {course.teamSize}명</p>
           <p>
             마감일:{' '}
-            {new Date(course.deadline).toLocaleDateString('ko-KR', {
+            {new Date(course.deadline).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',

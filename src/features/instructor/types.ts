@@ -24,6 +24,12 @@ export type StudentStatus = {
   name?: string;
   email?: string;
   major?: string;
+  gender?: string;
+  continent?: string;
+  role?: string;
+  skill?: string;
+  times?: string[];
+  goal?: string;
   profileCompleted: boolean;
   teamNumber?: number | null;
 };

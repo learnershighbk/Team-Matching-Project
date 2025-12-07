@@ -160,8 +160,8 @@ export function useResetStudentPin() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, pin }: { id: string; pin: string }) => {
-      const { data } = await apiClient.put<ApiResponse<null>>(`/api/admin/students/${id}/reset-pin`, { pin });
+    mutationFn: async ({ id }: { id: string }) => {
+      const { data } = await apiClient.put<ApiResponse<null>>(`/api/admin/students/${id}/reset-pin`, {});
       if (!data.success) {
         throw new Error(data.error?.message || 'PIN 리셋에 실패했습니다');
       }

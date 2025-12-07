@@ -145,8 +145,7 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
   // 학생 PIN 리셋
   admin.put('/students/:id/reset-pin', async (c) => {
     const studentId = c.req.param('id');
-    const body = await c.req.json();
-    const parsed = ResetStudentPinSchema.safeParse(body);
+    const parsed = ResetStudentPinSchema.safeParse({});
 
     if (!parsed.success) {
       return respond(c, zodErrorToResponse(parsed.error));
@@ -155,8 +154,33 @@ export const registerAdminRoutes = (app: Hono<AppEnv>) => {
     const supabase = getSupabase(c);
     const logger = getLogger(c);
 
+    // 학생 정보 조회 (학번 가져오기)
+    const { data: student, error: fetchError } = await supabase
+      .from('students')
+      .select('student_number')
+      .eq('student_id', studentId)
+      .single();
+
+    if (fetchError || !student) {
+      return respond(
+        c,
+        failure(404, adminErrorCodes.notFound, '학생을 찾을 수 없습니다')
+      );
+    }
+
+    // 학번 마지막 4자리를 PIN으로 사용
+    const studentNumber = student.student_number;
+    if (studentNumber.length < 4) {
+      return respond(
+        c,
+        failure(400, adminErrorCodes.fetchError, '학번이 너무 짧습니다')
+      );
+    }
+
+    const pin = studentNumber.slice(-4); // 마지막 4자리
+
     // PIN 해싱
-    const pinHash = await hashPassword(parsed.data.pin);
+    const pinHash = await hashPassword(pin);
 
     const result = await resetStudentPin(supabase, studentId, pinHash);
 

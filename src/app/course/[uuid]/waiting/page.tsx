@@ -64,7 +64,7 @@ export default function WaitingPage() {
           <div className="p-4 bg-muted rounded-lg mb-6">
             <p className="text-sm text-muted-foreground">마감일</p>
             <p className="font-medium">
-              {new Date(course.deadline).toLocaleDateString('ko-KR', {
+              {new Date(course.deadline).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
