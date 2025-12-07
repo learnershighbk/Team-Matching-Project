@@ -4,7 +4,7 @@ import { getSupabase, getLogger, getAuth } from '@/backend/hono/context';
 import { requireAuth } from '@/backend/middleware/auth';
 import { failure, respond, type ErrorResult } from '@/backend/http/response';
 import { zodErrorToResponse } from '@/lib/errors';
-import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema, ConfirmTeamsSchema, type CreateCourseInput } from './schema';
+import { CreateCourseSchema, UpdateCourseSchema, MatchCourseSchema, ConfirmTeamsSchema, type CreateCourseInput, type ConfirmTeamsInput } from './schema';
 import {
   getCourses,
   createCourse,

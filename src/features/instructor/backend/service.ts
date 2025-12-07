@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { success, failure, type HandlerResult } from '@/backend/http/response';
 import { instructorErrorCodes, type InstructorServiceError } from './error';
 import type { Course, StudentStatus, Team } from '../types';
-import type { CreateCourseInput, UpdateCourseInput } from './schema';
+import type { CreateCourseInput, UpdateCourseInput, ConfirmTeamsInput } from './schema';
 
 /**
  * Instructor Feature 비즈니스 로직
@@ -496,28 +496,7 @@ export async function confirmMatching(
   supabase: SupabaseClient,
   courseId: string,
   instructorId: string,
-  teams: Array<{
-    teamNumber: number;
-    memberCount: number;
-    scoreTotal: number;
-    scoreBreakdown: {
-      time: number;
-      skill: number;
-      role: number;
-      major: number;
-      goal: number;
-      continent: number;
-      gender: number;
-    };
-    topFactors: string[];
-    members: Array<{
-      studentId: string;
-      studentNumber: string;
-      name?: string;
-      email?: string;
-      major?: string;
-    }>;
-  }>
+  teams: ConfirmTeamsInput['teams']
 ): Promise<HandlerResult<{ courseId: string; status: string; teamCount: number }, InstructorServiceError, unknown>> {
   // 코스 소유권 및 상태 확인
   const { data: course, error: courseError } = await supabase
