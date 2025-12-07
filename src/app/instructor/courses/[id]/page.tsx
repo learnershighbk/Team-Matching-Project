@@ -38,6 +38,7 @@ import {
   useRunMatching,
   useConfirmTeams,
   useCourseTeams,
+  useUploadStudentsCSV,
 } from '@/features/instructor/hooks/useInstructor';
 import { toast } from '@/hooks/use-toast';
 import type { StudentStatus, Team, TeamMember } from '@/features/instructor/types';
@@ -52,6 +53,7 @@ import {
   Users,
   TrendingUp,
   Download,
+  Upload,
 } from 'lucide-react';
 
 // 라벨 매핑 함수들
@@ -146,10 +148,13 @@ export default function CourseDetailPage() {
   const { mutate: lockCourse, isPending: isLocking } = useLockCourse();
   const { mutate: runMatching, isPending: isMatching, data: matchingPreview } = useRunMatching();
   const { mutate: confirmTeams, isPending: isConfirming } = useConfirmTeams();
+  const { mutate: uploadCSV, isPending: isUploading } = useUploadStudentsCSV();
 
   const [showMatchingPreview, setShowMatchingPreview] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedWeightProfile, setSelectedWeightProfile] = useState<string>('');
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   // 가중치 프로파일 옵션
   const weightProfileOptions = [
@@ -240,6 +245,67 @@ export default function CourseDetailPage() {
     } catch (error) {
       console.error('Failed to copy URL:', error);
       toast({ title: '오류', description: 'URL 복사에 실패했습니다', variant: 'destructive' });
+    }
+  };
+
+  const handleDownloadCSVTemplate = () => {
+    try {
+      // CSV 양식 헤더 (업로드용 - 팀, 프로필 상태 제외)
+      const headers = ['학번', '이름', '이메일', '전공', '성별', '대륙', '역할', '역량', '시간대', '목표'];
+
+      // 예시 데이터 행 (올바른 형식 예시)
+      const exampleRows = [
+        [
+          '202500001',
+          '홍길동',
+          'hong@kdis.ac.kr',
+          'MPP',
+          'Male',
+          'Asia',
+          'Leader',
+          'Data Analysis',
+          'Weekday Daytime,Weekday Evening',
+          'A+',
+        ],
+        [
+          '202500002',
+          '김철수',
+          'kim@kdis.ac.kr',
+          'MDP',
+          'Female',
+          'North America',
+          'Executor',
+          'Research',
+          'Weekend',
+          'Balanced',
+        ],
+      ];
+
+      // CSV 내용 생성
+      const csvContent = [headers, ...exampleRows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      // BOM 추가 (한글 깨짐 방지)
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '학생_프로필_업로드_양식.csv';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: '성공',
+        description: 'CSV 양식 파일이 다운로드되었습니다. 예시 데이터를 참고하여 작성하세요.',
+      });
+    } catch (error) {
+      console.error('Failed to download CSV template:', error);
+      toast({ title: '오류', description: 'CSV 양식 다운로드에 실패했습니다', variant: 'destructive' });
     }
   };
 
@@ -377,6 +443,41 @@ export default function CourseDetailPage() {
           setShowMatchingPreview(false);
           setShowConfirmDialog(false);
           toast({ title: '성공', description: '팀이 확정되었습니다' });
+        },
+        onError: (error) => {
+          toast({ title: '오류', description: error.message, variant: 'destructive' });
+        },
+      }
+    );
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+        toast({ title: '오류', description: 'CSV 파일만 업로드할 수 있습니다', variant: 'destructive' });
+        return;
+      }
+      setCsvFile(file);
+    }
+  };
+
+  const handleUploadCSV = () => {
+    if (!csvFile) {
+      toast({ title: '오류', description: '파일을 선택해주세요', variant: 'destructive' });
+      return;
+    }
+
+    uploadCSV(
+      { courseId, file: csvFile },
+      {
+        onSuccess: (data) => {
+          setShowUploadDialog(false);
+          setCsvFile(null);
+          toast({
+            title: '성공',
+            description: `총 ${data.total}명의 학생이 처리되었습니다 (신규: ${data.created}, 업데이트: ${data.updated}, 오류: ${data.errors})`,
+          });
         },
         onError: (error) => {
           toast({ title: '오류', description: error.message, variant: 'destructive' });
@@ -607,12 +708,22 @@ export default function CourseDetailPage() {
                 <CardTitle>학생 목록 (현재 등록: {totalCount}명)</CardTitle>
                 <CardDescription>등록된 학생들의 프로필 상태를 확인합니다</CardDescription>
               </div>
-              {studentsArray.length > 0 && (
-                <Button variant="outline" onClick={handleDownloadCSV} size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  CSV 다운로드
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowUploadDialog(true)} size="sm">
+                  <Upload className="w-4 h-4 mr-2" />
+                  CSV 업로드
                 </Button>
-              )}
+                <Button variant="outline" onClick={handleDownloadCSVTemplate} size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  CSV 양식 다운로드
+                </Button>
+                {studentsArray.length > 0 && (
+                  <Button variant="outline" onClick={handleDownloadCSV} size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    CSV 다운로드
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -873,6 +984,75 @@ export default function CourseDetailPage() {
               </Button>
               <Button onClick={handleConfirmTeams} disabled={isConfirming}>
                 {isConfirming ? '확정 중...' : '확정'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* CSV Upload Dialog */}
+        <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>CSV 업로드</DialogTitle>
+              <DialogDescription>
+                CSV 파일을 업로드하여 학생 프로필을 일괄 등록하거나 업데이트할 수 있습니다.
+                <br />
+                <br />
+                <strong>CSV 형식 (10개 컬럼):</strong>
+                <br />
+                학번, 이름, 이메일, 전공, 성별, 대륙, 역할, 역량, 시간대, 목표
+                <br />
+                <br />
+                <Button
+                  variant="link"
+                  className="h-auto p-0 text-primary underline"
+                  onClick={handleDownloadCSVTemplate}
+                >
+                  📥 CSV 양식 다운로드
+                </Button>
+                <br />
+                <br />
+                <span className="text-xs text-muted-foreground">
+                  <strong>주의사항:</strong>
+                  <br />
+                  • 첫 번째 줄은 헤더로 무시됩니다
+                  <br />
+                  • 학번은 9자리 숫자여야 합니다
+                  <br />
+                  • 전공, 성별, 대륙, 역할, 역량, 목표는 레이블 형식(Male, Asia, Leader 등) 또는 enum 형식(male, asia, leader) 모두 지원
+                  <br />
+                  • 시간대는 여러 개를 쉼표로 구분 (예: Weekday Daytime,Weekend 또는 weekday_daytime,weekend)
+                  <br />
+                  • 빈 값은 null로 처리됩니다
+                  <br />
+                  • 기존 학생은 프로필 정보만 업데이트되고, 신규 학생은 생성됩니다 (기본 PIN: 0000)
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="csv-file">CSV 파일 선택</Label>
+                <input
+                  id="csv-file"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileSelect}
+                  className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                />
+                {csvFile && (
+                  <p className="mt-2 text-sm text-muted-foreground">선택된 파일: {csvFile.name}</p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setShowUploadDialog(false);
+                setCsvFile(null);
+              }}>
+                취소
+              </Button>
+              <Button onClick={handleUploadCSV} disabled={isUploading || !csvFile}>
+                {isUploading ? '업로드 중...' : '업로드'}
               </Button>
             </DialogFooter>
           </DialogContent>

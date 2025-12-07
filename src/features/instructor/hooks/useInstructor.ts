@@ -240,3 +240,37 @@ export function useCourseTeams(courseId: string) {
     enabled: !!courseId,
   });
 }
+
+// CSV Upload
+export function useUploadStudentsCSV() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ courseId, file }: { courseId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // FormData를 전송할 때는 Content-Type을 삭제해야 axios가 자동으로 multipart/form-data와 boundary를 설정함
+      const { data } = await apiClient.post<ApiResponse<{ total: number; created: number; updated: number; errors: number }>>(
+        `/api/instructor/courses/${courseId}/students/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': undefined as any, // FormData일 때 axios가 자동으로 설정
+          },
+        }
+      );
+      if (!data.success) {
+        throw new Error(data.error?.message || 'CSV 업로드에 실패했습니다');
+      }
+      return data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', variables.courseId, 'students'] });
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', variables.courseId] });
+    },
+    onError: (error) => {
+      console.error('Upload CSV error:', extractApiErrorMessage(error));
+    },
+  });
+}

@@ -715,3 +715,318 @@ export async function getCourseTeams(
   });
 }
 
+// 레이블 값을 enum 값으로 변환하는 헬퍼 함수들
+const normalizeMajorFromLabel = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'MPP': 'MPP',
+    'MDP': 'MDP',
+    'MPM': 'MPM',
+    'MDS': 'MDS',
+    'MIPD': 'MIPD',
+    'MPPM': 'MPPM',
+    'PhD': 'PhD',
+    'Ph.D.': 'PhD',
+    'Ph.D': 'PhD',
+  };
+  return labelToEnum[trimmed] || (['MPP', 'MDP', 'MPM', 'MDS', 'MIPD', 'MPPM', 'PhD'].includes(trimmed) ? trimmed : null);
+};
+
+const normalizeGenderFromLabel = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'Male': 'male',
+    'Female': 'female',
+    'Other': 'other',
+    'male': 'male',
+    'female': 'female',
+    'other': 'other',
+  };
+  return labelToEnum[trimmed] || null;
+};
+
+const normalizeContinentFromLabel = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'Asia': 'asia',
+    'Africa': 'africa',
+    'Europe': 'europe',
+    'North America': 'north_america',
+    'South America': 'south_america',
+    'Oceania': 'oceania',
+    'asia': 'asia',
+    'africa': 'africa',
+    'europe': 'europe',
+    'north_america': 'north_america',
+    'south_america': 'south_america',
+    'oceania': 'oceania',
+  };
+  return labelToEnum[trimmed] || null;
+};
+
+const normalizeRoleFromLabel = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'Leader': 'leader',
+    'Executor': 'executor',
+    'Ideator': 'ideator',
+    'Coordinator': 'coordinator',
+    'leader': 'leader',
+    'executor': 'executor',
+    'ideator': 'ideator',
+    'coordinator': 'coordinator',
+  };
+  return labelToEnum[trimmed] || null;
+};
+
+const normalizeSkillFromLabel = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'Data Analysis': 'data_analysis',
+    'Research': 'research',
+    'Writing': 'writing',
+    'Visual/PPT': 'visual',
+    'Visual': 'visual',
+    'Presentation': 'presentation',
+    'data_analysis': 'data_analysis',
+    'research': 'research',
+    'writing': 'writing',
+    'visual': 'visual',
+    'presentation': 'presentation',
+  };
+  return labelToEnum[trimmed] || null;
+};
+
+const normalizeTimeFromLabel = (value: string): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'Weekday Daytime': 'weekday_daytime',
+    'Weekday Evening': 'weekday_evening',
+    'Weekend': 'weekend',
+    'weekday_daytime': 'weekday_daytime',
+    'weekday_evening': 'weekday_evening',
+    'weekend': 'weekend',
+  };
+  return labelToEnum[trimmed] || null;
+};
+
+const normalizeGoalFromLabel = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const labelToEnum: Record<string, string> = {
+    'A+': 'a_plus',
+    'Balanced': 'balanced',
+    'Minimum': 'minimum',
+    'a_plus': 'a_plus',
+    'balanced': 'balanced',
+    'minimum': 'minimum',
+  };
+  return labelToEnum[trimmed] || null;
+};
+
+// CSV 업로드로 학생 프로필 일괄 등록/업데이트
+export async function uploadStudentsCSV(
+  supabase: SupabaseClient,
+  courseId: string,
+  instructorId: string,
+  file: File
+): Promise<HandlerResult<{ total: number; created: number; updated: number; errors: number }, InstructorServiceError, unknown>> {
+  // 코스 소유권 확인
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('instructor_id')
+    .eq('course_id', courseId)
+    .single();
+
+  if (courseError || !course || course.instructor_id !== instructorId) {
+    return failure(404, instructorErrorCodes.courseNotFound, '코스를 찾을 수 없습니다');
+  }
+
+  // CSV 파일 읽기 (BOM 제거 및 다양한 줄바꿈 처리)
+  let text = await file.text();
+  // BOM 제거 (UTF-8 BOM: \uFEFF)
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
+  // 다양한 줄바꿈 처리 (\r\n, \r, \n)
+  const lines = text.split(/\r?\n|\r/).filter(line => line.trim().length > 0);
+  
+  if (lines.length < 2) {
+    return failure(400, instructorErrorCodes.validationError, 'CSV 파일에 헤더와 최소 1개의 데이터 행이 필요합니다');
+  }
+
+  // 헤더 파싱하여 컬럼 인덱스 찾기
+  const headerLine = lines[0];
+  const dataLines = lines.slice(1);
+
+  // CSV 파싱 (간단한 파싱 - 따옴표 처리 포함)
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++; // 다음 따옴표 건너뛰기
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
+  // 헤더에서 컬럼 인덱스 찾기 (다양한 헤더 형식 지원)
+  const headerColumns = parseCSVLine(headerLine);
+  const findColumnIndex = (possibleNames: string[]): number | null => {
+    for (const name of possibleNames) {
+      const index = headerColumns.findIndex(
+        (h) => h.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, '')
+      );
+      if (index !== -1) return index;
+    }
+    return null;
+  };
+
+  const studentNumberIndex = findColumnIndex(['학번', 'student_number', 'studentnumber']) ?? 1;
+  const nameIndex = findColumnIndex(['이름', 'name']) ?? 2;
+  const emailIndex = findColumnIndex(['이메일', 'email']) ?? 3;
+  const majorIndex = findColumnIndex(['전공', 'major']) ?? 4;
+  const genderIndex = findColumnIndex(['성별', 'gender']) ?? 5;
+  const continentIndex = findColumnIndex(['대륙', 'continent']) ?? 6;
+  const roleIndex = findColumnIndex(['역할', 'role']) ?? 7;
+  const skillIndex = findColumnIndex(['역량', 'skill']) ?? 8;
+  const timesIndex = findColumnIndex(['시간대', 'times', 'time']) ?? 9;
+  const goalIndex = findColumnIndex(['목표', 'goal']) ?? 10;
+
+  const { hashPassword } = await import('@/lib/auth/hash');
+  
+  let created = 0;
+  let updated = 0;
+  let errors = 0;
+
+  // 각 행 처리
+  for (const line of dataLines) {
+    try {
+      const columns = parseCSVLine(line);
+      
+      // 최소 필수 필드 확인 (학번은 필수)
+      if (columns.length <= studentNumberIndex) {
+        errors++;
+        continue;
+      }
+
+      const studentNumber = columns[studentNumberIndex]?.trim() || '';
+      const name = columns[nameIndex]?.trim() || null;
+      const email = columns[emailIndex]?.trim() || null;
+      const major = columns[majorIndex]?.trim() || null;
+      const gender = columns[genderIndex]?.trim() || null;
+      const continent = columns[continentIndex]?.trim() || null;
+      const role = columns[roleIndex]?.trim() || null;
+      const skill = columns[skillIndex]?.trim() || null;
+      const timesStr = columns[timesIndex]?.trim() || '';
+      const goal = columns[goalIndex]?.trim() || null;
+
+      // 학번 검증
+      if (!studentNumber || !/^\d{9}$/.test(studentNumber)) {
+        errors++;
+        continue;
+      }
+
+      // 레이블 값을 enum 값으로 변환 (다운로드된 CSV 형식과 enum 형식 모두 지원)
+      const normalizedMajor = normalizeMajorFromLabel(major);
+      const normalizedGender = normalizeGenderFromLabel(gender);
+      const normalizedContinent = normalizeContinentFromLabel(continent);
+      const normalizedRole = normalizeRoleFromLabel(role);
+      const normalizedSkill = normalizeSkillFromLabel(skill);
+      const normalizedGoal = normalizeGoalFromLabel(goal);
+
+      // 시간대 파싱 및 검증 (쉼표로 구분, 레이블과 enum 형식 모두 지원)
+      const validTimes = ['weekday_daytime', 'weekday_evening', 'weekend'];
+      const times = timesStr
+        ? timesStr
+            .split(',')
+            .map(t => normalizeTimeFromLabel(t.trim()))
+            .filter((t): t is string => t !== null && validTimes.includes(t))
+        : [];
+
+      // 기존 학생 확인
+      const { data: existingStudent } = await supabase
+        .from('students')
+        .select('student_id, pin_hash')
+        .eq('course_id', courseId)
+        .eq('student_number', studentNumber)
+        .single();
+
+      const studentData: any = {
+        course_id: courseId,
+        student_number: studentNumber,
+        name: name || null,
+        email: email || null,
+        major: normalizedMajor,
+        gender: normalizedGender,
+        continent: normalizedContinent,
+        role: normalizedRole,
+        skill: normalizedSkill,
+        times: times.length > 0 ? times : [],
+        goal: normalizedGoal,
+      };
+
+      if (existingStudent) {
+        // 기존 학생 업데이트 (PIN은 업데이트하지 않음)
+        const { error: updateError } = await supabase
+          .from('students')
+          .update(studentData)
+          .eq('student_id', existingStudent.student_id);
+
+        if (updateError) {
+          errors++;
+        } else {
+          updated++;
+        }
+      } else {
+        // 새 학생 생성 (기본 PIN: 0000)
+        const defaultPin = '0000';
+        const pinHash = await hashPassword(defaultPin);
+        const { error: insertError } = await supabase
+          .from('students')
+          .insert({
+            ...studentData,
+            pin_hash: pinHash,
+          });
+
+        if (insertError) {
+          errors++;
+        } else {
+          created++;
+        }
+      }
+    } catch (error: any) {
+      errors++;
+      console.error('Error processing CSV row:', error);
+    }
+  }
+
+  return success({
+    total: dataLines.length,
+    created,
+    updated,
+    errors,
+  });
+}
+

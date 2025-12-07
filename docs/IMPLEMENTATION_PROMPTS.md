@@ -1021,3 +1021,4 @@ import { Skeleton } from '@/components/ui/skeleton';
 *이 문서는 백엔드 완료 후 프론트엔드 구현을 위한 단계별 가이드입니다.*
 
 
+

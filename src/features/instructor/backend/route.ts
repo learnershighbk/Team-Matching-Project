@@ -16,6 +16,7 @@ import {
   runMatching,
   confirmMatching,
   getCourseTeams,
+  uploadStudentsCSV,
 } from './service';
 import { instructorErrorCodes, type InstructorServiceError } from './error';
 import type { InstructorPayload } from '@/features/auth/backend/jwt';
@@ -247,6 +248,41 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
 
     const result = await getCourseTeams(supabase, courseId, auth.instructorId);
     return respond(c, result);
+  });
+
+  // CSV 업로드
+  instructor.post('/courses/:id/students/upload', async (c) => {
+    const auth = getAuth(c) as InstructorPayload | undefined;
+    if (!auth || auth.role !== 'instructor') {
+      return respond(c, failure(401, 'AUTH_003', '인증이 필요합니다'));
+    }
+
+    const courseId = c.req.param('id');
+    const supabase = getSupabase(c);
+    const logger = getLogger(c);
+
+    try {
+      const formData = await c.req.formData();
+      const file = formData.get('file') as File;
+
+      if (!file) {
+        return respond(c, failure(400, instructorErrorCodes.validationError, '파일이 제공되지 않았습니다'));
+      }
+
+      const result = await uploadStudentsCSV(supabase, courseId, auth.instructorId, file);
+
+      if (!result.ok) {
+        const errorResult = result as ErrorResult<InstructorServiceError, unknown>;
+        if (errorResult.error.code === instructorErrorCodes.fetchError) {
+          logger.error('Failed to upload CSV', errorResult.error.message);
+        }
+      }
+
+      return respond(c, result);
+    } catch (error: any) {
+      logger.error('CSV upload error', error);
+      return respond(c, failure(500, instructorErrorCodes.fetchError, error.message || 'CSV 업로드 중 오류가 발생했습니다'));
+    }
   });
 
   app.route('/api/instructor', instructor);
