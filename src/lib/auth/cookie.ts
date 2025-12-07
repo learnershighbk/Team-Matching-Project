@@ -1,6 +1,7 @@
 import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
-export const COOKIE_NAME = 'token';
+// Hono 백엔드와 일치하도록 쿠키 이름 통일
+export const COOKIE_NAME = 'teammatch_token';
 
 // Cookie 기본 옵션
 const baseCookieOptions: Partial<ResponseCookie> = {
