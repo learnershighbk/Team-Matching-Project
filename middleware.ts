@@ -10,6 +10,7 @@ import { COOKIE_NAME } from "@/lib/auth/cookie";
 
 /**
  * 역할별 로그인 페이지로 리다이렉트
+ * API 경로인 경우 JSON 응답을 반환하고, 페이지 경로인 경우 리다이렉트합니다.
  */
 function redirectToLogin(
   request: NextRequest,
@@ -17,6 +18,18 @@ function redirectToLogin(
 ): NextResponse {
   const { pathname } = request.nextUrl;
 
+  // API 경로인 경우 JSON 응답 반환
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "AUTH_003", message: "인증이 필요합니다" },
+      },
+      { status: 401 }
+    );
+  }
+
+  // 페이지 경로인 경우 리다이렉트
   // 역할에 따라 적절한 로그인 페이지로 리다이렉트
   if (role === "admin" || pathname.startsWith("/admin")) {
     const loginUrl = request.nextUrl.clone();
