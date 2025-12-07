@@ -49,6 +49,10 @@ export default function AdminDashboardPage() {
       onSuccess: () => {
         router.push('/login');
       },
+      onError: () => {
+        // 로그아웃 API 실패 시에도 로그인 페이지로 리다이렉트
+        router.push('/login');
+      },
     });
   };
 

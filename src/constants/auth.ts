@@ -7,6 +7,7 @@ const PUBLIC_PREFIXES = [
   "/api/admin/login",
   "/api/instructor/login",
   "/api/student/auth",
+  "/api/auth/logout",
   "/api/course",
   "/favicon",
   "/static",
