@@ -233,15 +233,38 @@ export default function InstructorDashboardPage() {
               <Button onClick={() => window.location.reload()}>다시 시도</Button>
             </CardContent>
           </Card>
-        ) : courses?.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground mb-4">아직 생성된 코스가 없습니다</p>
-              <p className="text-xs text-muted-foreground mb-4">
-                💡 참고: 로컬 환경에서 생성한 코스는 로컬 데이터베이스에만 저장됩니다.<br />
-                프로덕션 환경(vercel.app)에서는 프로덕션 데이터베이스의 코스만 표시됩니다.
-              </p>
-              <Button onClick={() => setIsDialogOpen(true)}>첫 코스 생성하기</Button>
+        ) : !courses || courses.length === 0 ? (
+          <Card className="text-center py-12 border-dashed border-2">
+            <CardContent className="space-y-4">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    아직 생성된 코스가 없습니다
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    첫 번째 코스를 생성하여 팀 매칭을 시작하세요
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => setIsDialogOpen(true)} size="lg" className="mt-4">
+                + 새 코스 생성하기
+              </Button>
             </CardContent>
           </Card>
         ) : (
