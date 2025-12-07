@@ -34,7 +34,7 @@ import type { Course } from '@/features/instructor/types';
 export default function InstructorDashboardPage() {
   const router = useRouter();
   const { mutate: logout } = useLogout();
-  const { data: courses, isLoading } = useInstructorCourses();
+  const { data: courses, isLoading, error: coursesError } = useInstructorCourses();
   const { mutate: createCourse, isPending: isCreating } = useCreateCourse();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -219,10 +219,28 @@ export default function InstructorDashboardPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
             <p className="text-muted-foreground">코스 목록을 불러오는 중...</p>
           </div>
+        ) : coursesError ? (
+          <Card className="text-center py-12 border-red-200 bg-red-50">
+            <CardContent>
+              <p className="text-red-600 font-semibold mb-2">코스 목록을 불러오는데 실패했습니다</p>
+              <p className="text-sm text-red-500 mb-4">
+                {coursesError instanceof Error ? coursesError.message : '알 수 없는 오류가 발생했습니다'}
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                💡 참고: 로컬 환경에서 생성한 코스는 로컬 데이터베이스에만 저장됩니다.<br />
+                프로덕션 환경(vercel.app)에서는 프로덕션 데이터베이스의 코스만 표시됩니다.
+              </p>
+              <Button onClick={() => window.location.reload()}>다시 시도</Button>
+            </CardContent>
+          </Card>
         ) : courses?.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <p className="text-muted-foreground mb-4">아직 생성된 코스가 없습니다</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                💡 참고: 로컬 환경에서 생성한 코스는 로컬 데이터베이스에만 저장됩니다.<br />
+                프로덕션 환경(vercel.app)에서는 프로덕션 데이터베이스의 코스만 표시됩니다.
+              </p>
               <Button onClick={() => setIsDialogOpen(true)}>첫 코스 생성하기</Button>
             </CardContent>
           </Card>

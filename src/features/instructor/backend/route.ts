@@ -48,8 +48,18 @@ export const registerInstructorRoutes = (app: Hono<AppEnv>) => {
       return respond(c, failure(401, 'AUTH_003', '인증이 필요합니다'));
     }
 
+    const logger = getLogger(c);
+    logger.info(`[GET /api/instructor/courses] Request from instructor: ${auth.instructorId} (${auth.email})`);
+
     const supabase = getSupabase(c);
     const result = await getCourses(supabase, auth.instructorId);
+    
+    if (result.ok) {
+      logger.info(`[GET /api/instructor/courses] Success: ${result.data.length} courses found`);
+    } else {
+      logger.error(`[GET /api/instructor/courses] Error: ${result.error.message}`);
+    }
+    
     return respond(c, result);
   });
 

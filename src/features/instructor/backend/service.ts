@@ -13,6 +13,8 @@ export async function getCourses(
   supabase: SupabaseClient,
   instructorId: string
 ): Promise<HandlerResult<Course[], InstructorServiceError, unknown>> {
+  console.log('[getCourses] Fetching courses for instructorId:', instructorId);
+  
   const { data: courses, error } = await supabase
     .from('courses')
     .select('course_id, course_name, course_code, team_size, weight_profile, status, deadline, created_at')
@@ -20,8 +22,11 @@ export async function getCourses(
     .order('created_at', { ascending: false });
 
   if (error) {
+    console.error('[getCourses] Database error:', error);
     return failure(500, instructorErrorCodes.fetchError, error.message);
   }
+
+  console.log('[getCourses] Found courses:', courses?.length || 0);
 
   // 각 코스의 학생 수와 완료 수 조회
   const coursesWithCounts = await Promise.all((courses || []).map(async (course) => {

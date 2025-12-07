@@ -15,11 +15,18 @@ export function useInstructorCourses() {
   return useQuery({
     queryKey: ['instructor', 'courses'],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<Course[]>>('/api/instructor/courses');
-      if (!data.success) {
-        throw new Error(data.error?.message || '코스 목록을 불러오는데 실패했습니다');
+      try {
+        const { data } = await apiClient.get<ApiResponse<Course[]>>('/api/instructor/courses');
+        if (!data.success) {
+          console.error('Failed to fetch courses:', data.error);
+          throw new Error(data.error?.message || '코스 목록을 불러오는데 실패했습니다');
+        }
+        console.log('Fetched courses:', data.data);
+        return data.data || [];
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        throw error;
       }
-      return data.data || [];
     },
   });
 }
