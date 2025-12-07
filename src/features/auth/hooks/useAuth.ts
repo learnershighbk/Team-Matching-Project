@@ -164,15 +164,16 @@ export function useStudentAuth() {
 // Logout
 export function useLogout() {
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   return useMutation({
     mutationFn: async () => {
       await apiClient.post<null>('/api/auth/logout');
     },
     onSuccess: () => {
+      // 쿼리 캐시 클리어
       queryClient.clear();
-      router.push('/');
+      // 리다이렉트는 호출하는 쪽에서 처리하도록 변경
+      // (각 페이지에서 적절한 경로로 리다이렉트할 수 있도록)
     },
   });
 }

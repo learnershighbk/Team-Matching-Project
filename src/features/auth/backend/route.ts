@@ -51,7 +51,18 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
 
   // 로그아웃
   app.post("/api/auth/logout", async (c) => {
-    deleteCookie(c, COOKIE_NAME, { path: "/" });
+    // 쿠키 삭제: 명시적으로 만료시켜 삭제
+    deleteCookie(c, COOKIE_NAME, {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+    // 추가로 빈 값과 maxAge: 0을 설정하여 확실히 삭제
+    setCookie(c, COOKIE_NAME, "", {
+      ...COOKIE_OPTIONS,
+      maxAge: 0,
+    });
     return respond(c, success(null));
   });
 
