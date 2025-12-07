@@ -345,3 +345,4 @@ function CourseCard({
     </Card>
   );
 }
+

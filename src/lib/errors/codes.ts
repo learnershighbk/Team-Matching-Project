@@ -121,3 +121,4 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ADMIN_ERROR_CODES.NOT_FOUND]: '리소스를 찾을 수 없습니다',
 };
 
+

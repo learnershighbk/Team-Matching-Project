@@ -10,3 +10,4 @@ export const CourseIdParamsSchema = z.object({
 
 export type CourseIdParams = z.infer<typeof CourseIdParamsSchema>;
 
+

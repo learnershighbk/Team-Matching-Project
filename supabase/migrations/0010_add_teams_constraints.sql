@@ -10,3 +10,4 @@ ALTER TABLE teams
 -- 주석 추가
 COMMENT ON COLUMN teams.top_factors IS '상위 2개 매칭 요소 (최대 2개)';
 
+
