@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 
 // 공개 경로 (인증 불필요)
-const PUBLIC_PATHS = ["/"] as const;
+const PUBLIC_PATHS = ["/", "/login", "/signup"] as const;
 const PUBLIC_PREFIXES = [
   "/_next",
   "/api/admin/login",
